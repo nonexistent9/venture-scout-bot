@@ -26,17 +26,23 @@ export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
         </Button>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 mb-12">
+      <div className="grid md:grid-cols-3 gap-6 mb-12">
         <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-6 text-left">
-          <h3 className="text-xl font-semibold text-white mb-3">🚀 Quick Scan</h3>
+          <h3 className="text-xl font-semibold text-white mb-3">🚀 Elevator Pitch</h3>
           <p className="text-white/70">
-            Get instant feedback with a 3-bullet elevator pitch, top competitors, and major risks identified in seconds.
+            Get a clear value proposition, target market description, and unique competitive advantage for your idea.
           </p>
         </Card>
         <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-6 text-left">
-          <h3 className="text-xl font-semibold text-white mb-3">🔍 Deep Dive</h3>
+          <h3 className="text-xl font-semibold text-white mb-3">🏢 Competitor Analysis</h3>
           <p className="text-white/70">
-            Comprehensive analysis including market size, user personas, go-to-market strategies, and next milestones.
+            Identify your main competitors with detailed descriptions and market positioning insights.
+          </p>
+        </Card>
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-6 text-left">
+          <h3 className="text-xl font-semibold text-white mb-3">⚠️ Risk Assessment</h3>
+          <p className="text-white/70">
+            Understand the major risks and challenges your startup might face with actionable insights.
           </p>
         </Card>
       </div>

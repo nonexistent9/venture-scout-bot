@@ -25,19 +25,20 @@ interface ValidationData {
   gtmChannels?: string[];
   nextMilestones?: string[];
   reasoning?: string;
+  sources?: string[];
 }
 
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hi! I'm your Startup Idea Validator. Share your startup idea (1-2 lines) and I'll help you validate it. I can provide quick insights or deep analysis based on your needs.",
+      text: "Hi! I'm your Startup Idea Validator. Share your startup idea (1-2 lines) and I'll help you validate it with AI-powered analysis and structured insights.",
       isUser: false,
       timestamp: new Date()
     }
   ]);
   const [inputText, setInputText] = useState('');
-  const [isDeepDive, setIsDeepDive] = useState(false);
+  const [selectedModel] = useState<'sonar-reasoning'>('sonar-reasoning');
   const [showReasoning, setShowReasoning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationData | null>(null);
@@ -53,6 +54,65 @@ export const ChatInterface = () => {
     setMessages(prev => [...prev, newMessage]);
   };
 
+  const createFallbackResult = (rawResponse: string): ValidationData | null => {
+    try {
+      // Extract key information from the raw response
+      const lines = rawResponse.split('\n').filter(line => line.trim());
+      
+      // Look for structured information in the response
+      const elevatorPitch = [];
+      const competitors = [];
+      let majorRisk = '';
+      let reasoning = '';
+      
+      // Try to extract elevator pitch points
+      const pitchMatches = rawResponse.match(/(?:elevator pitch|pitch)[\s\S]*?(?:\d+\.|\•|\-)\s*([^\n]+)/gi);
+      if (pitchMatches) {
+        pitchMatches.slice(0, 3).forEach(match => {
+          const point = match.replace(/.*(?:\d+\.|\•|\-)\s*/, '').trim();
+          if (point) elevatorPitch.push(point);
+        });
+      }
+      
+      // Try to extract competitors
+      const competitorMatches = rawResponse.match(/(?:competitor|competition)[\s\S]*?(?:\d+\.|\•|\-)\s*([^\n]+)/gi);
+      if (competitorMatches) {
+        competitorMatches.slice(0, 2).forEach(match => {
+          const competitor = match.replace(/.*(?:\d+\.|\•|\-)\s*/, '').trim();
+          if (competitor) competitors.push(competitor);
+        });
+      }
+      
+      // Try to extract major risk
+      const riskMatch = rawResponse.match(/(?:major risk|risk)[\s\S]*?:\s*([^\n]+)/i);
+      if (riskMatch) {
+        majorRisk = riskMatch[1].trim();
+      }
+      
+      // Extract reasoning if available
+      const reasoningMatch = rawResponse.match(/<think>([\s\S]*?)<\/think>/);
+      if (reasoningMatch) {
+        reasoning = reasoningMatch[1].trim();
+      }
+      
+      // Only return if we have some meaningful data
+      if (elevatorPitch.length > 0 || competitors.length > 0 || majorRisk) {
+        return {
+          elevatorPitch: elevatorPitch.length > 0 ? elevatorPitch : ['Analysis provided in raw format'],
+          competitors: competitors.length > 0 ? competitors : ['See raw analysis for competitor information'],
+          majorRisk: majorRisk || 'Risk analysis provided in raw format',
+          reasoning: reasoning || 'Reasoning process included in analysis',
+          sources: ['Analysis based on general knowledge and industry patterns']
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error creating fallback result:', error);
+      return null;
+    }
+  };
+
   const validateIdea = async (idea: string) => {
     if (!apiKey.trim()) {
       addMessage("Please enter your Perplexity API key first to continue.", false);
@@ -62,33 +122,56 @@ export const ChatInterface = () => {
     setIsLoading(true);
     
     try {
-      const systemPrompt = isDeepDive 
-        ? `You are a startup validation expert. Analyze the given startup idea and provide your response as a valid JSON object with NO markdown formatting, NO code blocks, NO explanations outside the JSON.
+      // Define JSON schema for structured output
+      const reasoningSchema = {
+        type: "object",
+        properties: {
+          elevatorPitch: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 3,
+            maxItems: 3,
+            description: "Three key points: value proposition, target market, unique advantage"
+          },
+          competitors: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 2,
+            maxItems: 3,
+            description: "Main competitors with brief descriptions"
+          },
+          majorRisk: {
+            type: "string",
+            description: "Primary risk or challenge for this startup"
+          },
+          reasoning: {
+            type: "string",
+            description: "Step-by-step analysis explanation"
+          },
+          sources: {
+            type: "array",
+            items: { type: "string" },
+            minItems: 2,
+            maxItems: 4,
+            description: "Research sources with URLs"
+          }
+        },
+        required: ["elevatorPitch", "competitors", "majorRisk", "reasoning", "sources"],
+        additionalProperties: false
+      };
 
-           Required JSON structure:
-           {
-             "elevatorPitch": ["bullet point 1", "bullet point 2", "bullet point 3"],
-             "competitors": ["competitor 1 with description", "competitor 2 with description"],
-             "majorRisk": "single major risk description",
-             "marketSize": "market size estimate with reasoning",
-             "userPersonas": ["persona 1", "persona 2", "persona 3"],
-             "gtmChannels": ["channel 1", "channel 2", "channel 3"],
-             "nextMilestones": ["milestone 1", "milestone 2", "milestone 3"],
-             "reasoning": "your step-by-step reasoning process"
-           }
+      const systemPrompt = `You are a startup validation expert using Chain-of-Thought reasoning. Analyze the startup idea with structured reasoning and provide key insights.
 
-           Return ONLY the JSON object, nothing else.`
-        : `You are a startup validation expert. Analyze the given startup idea and provide your response as a valid JSON object with NO markdown formatting, NO code blocks, NO explanations outside the JSON.
+IMPORTANT: You must provide actual website URLs in the sources array. Each source should be formatted as "Website Name: https://example.com" with real, working URLs from your research.
 
-           Required JSON structure:
-           {
-             "elevatorPitch": ["bullet point 1", "bullet point 2", "bullet point 3"],
-             "competitors": ["competitor 1 with description", "competitor 2 with description"],
-             "majorRisk": "single major risk description",
-             "reasoning": "your step-by-step reasoning process"
-           }
+For the elevatorPitch array, provide exactly 3 distinct points:
+1. Clear value proposition
+2. Target market description  
+3. Unique competitive advantage
 
-           Return ONLY the JSON object, nothing else.`;
+For competitors, provide 2-3 specific company names with brief descriptions.
+
+Ensure all arrays contain separate string elements, not concatenated text.`;
 
       const response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
@@ -97,7 +180,7 @@ export const ChatInterface = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'llama-3.1-sonar-small-128k-online',
+          model: selectedModel,
           messages: [
             {
               role: 'system',
@@ -110,11 +193,17 @@ export const ChatInterface = () => {
           ],
           temperature: 0.2,
           top_p: 0.9,
-          max_tokens: 2000,
+          max_tokens: 3000,
           return_images: false,
           return_related_questions: false,
           frequency_penalty: 1,
-          presence_penalty: 0
+          presence_penalty: 0,
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              schema: reasoningSchema
+            }
+          }
         }),
       });
 
@@ -125,19 +214,51 @@ export const ChatInterface = () => {
       const data = await response.json();
       let aiResponse = data.choices[0].message.content;
       
-      // Clean up the response to remove any markdown formatting
-      aiResponse = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').replace(/^###.*\n/gm, '').trim();
+      console.log('Raw AI Response:', aiResponse);
       
-      console.log('Cleaned AI Response:', aiResponse);
+      // Handle reasoning with structured output
+      if (aiResponse.includes('<think>')) {
+        // Extract the JSON part after the thinking section
+        const thinkEndIndex = aiResponse.lastIndexOf('</think>');
+        if (thinkEndIndex !== -1) {
+          aiResponse = aiResponse.substring(thinkEndIndex + 8).trim();
+        }
+      }
+      
+      // Clean up JSON formatting
+      aiResponse = aiResponse
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+      
+      console.log('Processed AI Response:', aiResponse);
       
       try {
         const parsedResult = JSON.parse(aiResponse);
-        setValidationResult(parsedResult);
-        addMessage(`${isDeepDive ? 'Deep dive' : 'Quick scan'} analysis complete! Here are your results:`, false);
+        
+        const cleanedResult: ValidationData = {
+          elevatorPitch: Array.isArray(parsedResult.elevatorPitch) ? parsedResult.elevatorPitch : [],
+          competitors: Array.isArray(parsedResult.competitors) ? parsedResult.competitors : [],
+          majorRisk: typeof parsedResult.majorRisk === 'string' ? parsedResult.majorRisk : 'Risk analysis not available',
+          reasoning: typeof parsedResult.reasoning === 'string' ? parsedResult.reasoning : 'Reasoning not available',
+          sources: Array.isArray(parsedResult.sources) ? parsedResult.sources : []
+        };
+        
+        console.log('Cleaned result:', cleanedResult);
+        
+        setValidationResult(cleanedResult);
+        addMessage('Analysis complete! Here are your results:', false);
       } catch (parseError) {
-        console.error('Failed to parse AI response:', parseError);
-        console.error('Raw response:', aiResponse);
-        addMessage("I've analyzed your idea, but had trouble formatting the results. Here's what I found: " + aiResponse, false);
+        console.error('Failed to parse structured output:', parseError);
+        console.error('Response that failed to parse:', aiResponse);
+        
+        const fallbackResult = createFallbackResult(data.choices[0].message.content);
+        if (fallbackResult) {
+          setValidationResult(fallbackResult);
+          addMessage('Analysis complete! Here are your results:', false);
+        } else {
+          addMessage("I encountered an issue with the response format. Please try again.", false);
+        }
       }
     } catch (error) {
       console.error('Validation error:', error);
@@ -162,28 +283,26 @@ export const ChatInterface = () => {
       
       <Card className="bg-white/95 backdrop-blur-sm shadow-xl mb-6">
         <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Analysis Settings</h3>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  checked={isDeepDive} 
-                  onCheckedChange={setIsDeepDive}
-                  id="deep-dive"
-                />
-                <label htmlFor="deep-dive" className="text-sm font-medium">
-                  Deep Dive Mode
-                </label>
-              </div>
-              <div className="flex items-center space-x-2">
+          <h3 className="text-lg font-semibold mb-4">AI Analysis Settings</h3>
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
                 <Switch 
                   checked={showReasoning} 
                   onCheckedChange={setShowReasoning}
                   id="show-reasoning"
                 />
-                <label htmlFor="show-reasoning" className="text-sm font-medium">
-                  Show AI Reasoning
-                </label>
+                <div>
+                  <label htmlFor="show-reasoning" className="font-medium text-blue-800">
+                    Show AI Reasoning Process
+                  </label>
+                  <p className="text-sm text-blue-600">
+                    See step-by-step analysis and transparent decision-making
+                  </p>
+                </div>
+              </div>
+              <div className="text-blue-500">
+                🧠
               </div>
             </div>
           </div>
@@ -213,7 +332,7 @@ export const ChatInterface = () => {
             <ValidationResult 
               data={validationResult} 
               showReasoning={showReasoning}
-              isDeepDive={isDeepDive}
+              selectedModel="sonar-reasoning"
             />
           )}
 

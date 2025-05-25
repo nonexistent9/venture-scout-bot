@@ -12,15 +12,16 @@ interface ValidationData {
   gtmChannels?: string[];
   nextMilestones?: string[];
   reasoning?: string;
+  sources?: string[];
 }
 
 interface ValidationResultProps {
   data: ValidationData;
   showReasoning: boolean;
-  isDeepDive: boolean;
+  selectedModel: 'sonar-reasoning' | 'sonar-deep-research';
 }
 
-export const ValidationResult = ({ data, showReasoning, isDeepDive }: ValidationResultProps) => {
+export const ValidationResult = ({ data, showReasoning, selectedModel }: ValidationResultProps) => {
   const exportToPDF = () => {
     const content = generateExportContent();
     
@@ -60,7 +61,7 @@ export const ValidationResult = ({ data, showReasoning, isDeepDive }: Validation
     
     content += `\nMAJOR RISK:\n${data.majorRisk}\n`;
     
-    if (isDeepDive) {
+    if (selectedModel === 'sonar-deep-research') {
       if (data.marketSize) content += `\nMARKET SIZE:\n${data.marketSize}\n`;
       
       if (data.userPersonas) {
@@ -89,144 +90,249 @@ export const ValidationResult = ({ data, showReasoning, isDeepDive }: Validation
       content += `\nAI REASONING:\n${data.reasoning}\n`;
     }
     
+    if (data.sources && data.sources.length > 0) {
+      content += "\nSOURCES:\n";
+      data.sources.forEach((source, index) => {
+        content += `[${index + 1}] ${source}\n`;
+      });
+    }
+    
     return content;
   };
 
   return (
-    <Card className="mt-6 p-6 bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-gray-800">
-          {isDeepDive ? 'Deep Dive Analysis' : 'Quick Scan Results'}
-        </h3>
-        <div className="flex space-x-2">
-          <Button 
-            onClick={copyToClipboard}
-            variant="outline" 
-            size="sm"
-            className="text-sm"
-          >
-            Copy Report
-          </Button>
-          <Button 
-            onClick={exportToPDF}
-            size="sm"
-            className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-sm"
-          >
-            Export Report
-          </Button>
+    <div className="mt-6 space-y-4">
+      {/* Header */}
+      <Card className="p-6 bg-gradient-to-r from-purple-500 to-blue-500 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-2xl font-bold mb-2">
+              {selectedModel === 'sonar-deep-research' ? '🔍 Deep Research Analysis' : '🧠 Quick Reasoning Results'}
+            </h3>
+            <p className="text-purple-100">
+              {selectedModel === 'sonar-deep-research' 
+                ? 'Comprehensive analysis with exhaustive research' 
+                : 'Fast Chain-of-Thought structured analysis'
+              }
+            </p>
+          </div>
+          <div className="flex space-x-2">
+            <Button 
+              onClick={copyToClipboard}
+              variant="outline" 
+              size="sm"
+              className="text-purple-600 border-white hover:bg-white/10"
+            >
+              Copy Report
+            </Button>
+            <Button 
+              onClick={exportToPDF}
+              size="sm"
+              className="bg-white text-purple-600 hover:bg-gray-100"
+            >
+              Export Report
+            </Button>
+          </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="grid gap-6">
+      {/* Main Content */}
+      <div className="grid gap-4">
         {/* Elevator Pitch */}
-        <div>
-          <h4 className="font-semibold text-lg mb-3 text-purple-800">🚀 Elevator Pitch</h4>
-          <ul className="space-y-2">
+        <Card className="p-6 bg-white shadow-lg border-l-4 border-purple-500">
+          <h4 className="font-bold text-xl mb-4 text-purple-800 flex items-center">
+            🚀 <span className="ml-2">Elevator Pitch</span>
+          </h4>
+          <div className="space-y-3">
             {data.elevatorPitch?.map((point, index) => (
-              <li key={index} className="flex items-start space-x-2">
-                <span className="font-semibold text-purple-600">•</span>
-                <span className="text-gray-700">{point}</span>
-              </li>
+              <div key={index} className="flex items-start space-x-3 p-3 bg-purple-50 rounded-lg">
+                <span className="flex-shrink-0 w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                  {index + 1}
+                </span>
+                <span className="text-gray-800 font-medium">{point}</span>
+              </div>
             ))}
-          </ul>
-        </div>
-
-        <Separator />
+          </div>
+        </Card>
 
         {/* Competitors */}
-        <div>
-          <h4 className="font-semibold text-lg mb-3 text-blue-800">🏢 Top Competitors</h4>
-          <ul className="space-y-2">
+        <Card className="p-6 bg-white shadow-lg border-l-4 border-blue-500">
+          <h4 className="font-bold text-xl mb-4 text-blue-800 flex items-center">
+            🏢 <span className="ml-2">Top Competitors</span>
+          </h4>
+          <div className="space-y-3">
             {data.competitors?.map((competitor, index) => (
-              <li key={index} className="flex items-start space-x-2">
-                <span className="font-semibold text-blue-600">{index + 1}.</span>
-                <span className="text-gray-700">{competitor}</span>
-              </li>
+              <div key={index} className="flex items-start space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <span className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold">
+                  {index + 1}
+                </span>
+                <span className="text-gray-800 font-medium">{competitor}</span>
+              </div>
             ))}
-          </ul>
-        </div>
-
-        <Separator />
+          </div>
+        </Card>
 
         {/* Major Risk */}
-        <div>
-          <h4 className="font-semibold text-lg mb-3 text-red-800">⚠️ Major Risk</h4>
-          <p className="text-gray-700 bg-red-50 p-3 rounded-lg border-l-4 border-red-400">
-            {data.majorRisk}
-          </p>
-        </div>
+        <Card className="p-6 bg-white shadow-lg border-l-4 border-red-500">
+          <h4 className="font-bold text-xl mb-4 text-red-800 flex items-center">
+            ⚠️ <span className="ml-2">Major Risk</span>
+          </h4>
+          <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+            <p className="text-gray-800 font-medium leading-relaxed">{data.majorRisk}</p>
+          </div>
+        </Card>
 
-        {/* Deep Dive Content */}
-        {isDeepDive && (
+        {/* Deep Research Content */}
+        {selectedModel === 'sonar-deep-research' && (
           <>
-            <Separator />
-            
             {data.marketSize && (
-              <div>
-                <h4 className="font-semibold text-lg mb-3 text-green-800">📊 Market Size</h4>
-                <p className="text-gray-700 bg-green-50 p-3 rounded-lg border-l-4 border-green-400">
-                  {data.marketSize}
-                </p>
-              </div>
+              <Card className="p-6 bg-white shadow-lg border-l-4 border-green-500">
+                <h4 className="font-bold text-xl mb-4 text-green-800 flex items-center">
+                  📊 <span className="ml-2">Market Size</span>
+                </h4>
+                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-gray-800 font-medium leading-relaxed">{data.marketSize}</p>
+                </div>
+              </Card>
             )}
 
             {data.userPersonas && (
-              <div>
-                <h4 className="font-semibold text-lg mb-3 text-indigo-800">👥 User Personas</h4>
-                <ul className="space-y-2">
+              <Card className="p-6 bg-white shadow-lg border-l-4 border-indigo-500">
+                <h4 className="font-bold text-xl mb-4 text-indigo-800 flex items-center">
+                  👥 <span className="ml-2">User Personas</span>
+                </h4>
+                <div className="space-y-3">
                   {data.userPersonas.map((persona, index) => (
-                    <li key={index} className="flex items-start space-x-2">
-                      <span className="font-semibold text-indigo-600">{index + 1}.</span>
-                      <span className="text-gray-700">{persona}</span>
-                    </li>
+                    <div key={index} className="flex items-start space-x-3 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                      <span className="flex-shrink-0 w-8 h-8 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold">
+                        {index + 1}
+                      </span>
+                      <span className="text-gray-800 font-medium">{persona}</span>
+                    </div>
                   ))}
-                </ul>
-              </div>
+                </div>
+              </Card>
             )}
 
             {data.gtmChannels && (
-              <div>
-                <h4 className="font-semibold text-lg mb-3 text-orange-800">📢 Go-to-Market Channels</h4>
-                <ul className="space-y-2">
+              <Card className="p-6 bg-white shadow-lg border-l-4 border-orange-500">
+                <h4 className="font-bold text-xl mb-4 text-orange-800 flex items-center">
+                  📢 <span className="ml-2">Go-to-Market Channels</span>
+                </h4>
+                <div className="space-y-3">
                   {data.gtmChannels.map((channel, index) => (
-                    <li key={index} className="flex items-start space-x-2">
-                      <span className="font-semibold text-orange-600">{index + 1}.</span>
-                      <span className="text-gray-700">{channel}</span>
-                    </li>
+                    <div key={index} className="flex items-start space-x-3 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                      <span className="flex-shrink-0 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold">
+                        {index + 1}
+                      </span>
+                      <span className="text-gray-800 font-medium">{channel}</span>
+                    </div>
                   ))}
-                </ul>
-              </div>
+                </div>
+              </Card>
             )}
 
             {data.nextMilestones && (
-              <div>
-                <h4 className="font-semibold text-lg mb-3 text-teal-800">🎯 Next Milestones</h4>
-                <ul className="space-y-2">
+              <Card className="p-6 bg-white shadow-lg border-l-4 border-teal-500">
+                <h4 className="font-bold text-xl mb-4 text-teal-800 flex items-center">
+                  🎯 <span className="ml-2">Next Milestones</span>
+                </h4>
+                <div className="space-y-3">
                   {data.nextMilestones.map((milestone, index) => (
-                    <li key={index} className="flex items-start space-x-2">
-                      <span className="font-semibold text-teal-600">{index + 1}.</span>
-                      <span className="text-gray-700">{milestone}</span>
-                    </li>
+                    <div key={index} className="flex items-start space-x-3 p-4 bg-teal-50 rounded-lg border border-teal-200">
+                      <span className="flex-shrink-0 w-8 h-8 bg-teal-500 text-white rounded-full flex items-center justify-center font-bold">
+                        {index + 1}
+                      </span>
+                      <span className="text-gray-800 font-medium">{milestone}</span>
+                    </div>
                   ))}
-                </ul>
-              </div>
+                </div>
+              </Card>
             )}
           </>
         )}
 
         {/* AI Reasoning */}
         {showReasoning && data.reasoning && (
-          <>
-            <Separator />
-            <div>
-              <h4 className="font-semibold text-lg mb-3 text-gray-800">🧠 AI Reasoning Process</h4>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="text-gray-600 text-sm italic">{data.reasoning}</p>
+          <Card className="p-6 bg-white shadow-lg border-l-4 border-gray-500">
+            <h4 className="font-bold text-xl mb-4 text-gray-800 flex items-center">
+              🧠 <span className="ml-2">AI Reasoning Process</span>
+            </h4>
+            <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-5 rounded-lg border border-gray-200">
+              <div className="flex items-start space-x-3 mb-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center">
+                  <span className="text-sm">🤔</span>
+                </div>
+                <div className="flex-1">
+                  <h5 className="font-semibold text-gray-800 mb-2">How I analyzed your startup idea:</h5>
+                  <div className="prose prose-sm max-w-none">
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">{data.reasoning}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-gray-200">
+                <p className="text-xs text-gray-500 italic">
+                  This reasoning process shows the AI's step-by-step analysis to provide transparent and explainable insights.
+                </p>
               </div>
             </div>
-          </>
+          </Card>
+        )}
+
+        {/* Sources */}
+        {data.sources && data.sources.length > 0 && (
+          <Card className="p-6 bg-white shadow-lg border-l-4 border-emerald-500">
+            <h4 className="font-bold text-xl mb-4 text-emerald-800 flex items-center">
+              📚 <span className="ml-2">Research Sources</span>
+            </h4>
+            <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-200">
+              <p className="text-sm text-emerald-700 mb-4 font-medium">
+                The analysis above is based on research from the following sources:
+              </p>
+              <div className="space-y-3">
+                {data.sources.map((source, index) => (
+                  <div key={index} className="flex items-start space-x-3 p-3 bg-white rounded-lg border border-emerald-200">
+                    <span className="flex-shrink-0 w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                      {index + 1}
+                    </span>
+                    <div className="flex-1">
+                      {(() => {
+                        // Extract URL from source string
+                        const urlMatch = source.match(/(https?:\/\/[^\s]+)/);
+                        const url = urlMatch ? urlMatch[1] : null;
+                        
+                        if (url) {
+                          // Extract the title (everything before the URL)
+                          const title = source.replace(/(https?:\/\/[^\s]+)/g, '').replace(/:\s*$/, '').trim();
+                          const displayTitle = title || url;
+                          
+                          return (
+                            <a 
+                              href={url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-emerald-700 hover:text-emerald-900 underline font-medium"
+                            >
+                              {displayTitle}
+                            </a>
+                          );
+                        } else {
+                          return <span className="text-gray-800 font-medium">{source}</span>;
+                        }
+                      })()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 pt-3 border-t border-emerald-200">
+                <p className="text-xs text-emerald-600 italic">
+                  Sources are automatically gathered from real-time web research to ensure current and accurate information.
+                </p>
+              </div>
+            </div>
+          </Card>
         )}
       </div>
-    </Card>
+    </div>
   );
 };
