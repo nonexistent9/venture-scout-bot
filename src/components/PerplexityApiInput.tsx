@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,24 +10,24 @@ interface PerplexityApiInputProps {
 
 export const PerplexityApiInput = ({ apiKey, setApiKey }: PerplexityApiInputProps) => {
   return (
-    <Card className="bg-amber-50 border-amber-200 p-4 mb-6">
-      <div className="flex items-start space-x-3">
-        <div className="text-amber-600 mt-1">⚠️</div>
+    <Card className="bg-gray-50 border border-gray-200 p-6">
+      <div className="flex items-start space-x-4">
+        <div className="text-gray-600 mt-1 text-xl">🔑</div>
         <div className="flex-1">
-          <h3 className="font-semibold text-amber-800 mb-2">Perplexity API Key Required</h3>
-          <p className="text-sm text-amber-700 mb-3">
+          <h3 className="font-semibold text-gray-900 mb-3">Perplexity API Key Required</h3>
+          <p className="text-sm text-gray-600 mb-4 leading-relaxed">
             To use the Startup Idea Validator, you need a Perplexity API key. You can get one from{' '}
             <a 
               href="https://www.perplexity.ai/settings/api" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="underline hover:text-amber-800"
+              className="text-gray-900 underline hover:text-gray-700 font-medium"
             >
               Perplexity's API settings
             </a>.
           </p>
-          <div className="space-y-2">
-            <Label htmlFor="api-key" className="text-sm font-medium text-amber-800">
+          <div className="space-y-3">
+            <Label htmlFor="api-key" className="text-sm font-medium text-gray-900">
               Enter your Perplexity API Key:
             </Label>
             <Input
@@ -37,7 +36,7 @@ export const PerplexityApiInput = ({ apiKey, setApiKey }: PerplexityApiInputProp
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="pplx-..."
-              className="bg-white border-amber-300 focus:border-amber-500"
+              className="bg-white border-gray-200 focus:border-gray-400 text-base"
             />
           </div>
         </div>

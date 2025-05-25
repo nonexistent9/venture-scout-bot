@@ -278,30 +278,30 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto space-y-8">
       <PerplexityApiInput apiKey={apiKey} setApiKey={setApiKey} />
       
-      <Card className="bg-white/95 backdrop-blur-sm shadow-xl mb-6">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4">AI Analysis Settings</h3>
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+      <Card className="bg-white border border-gray-100 shadow-sm">
+        <div className="p-8">
+          <h3 className="text-xl font-semibold text-gray-900 mb-6">AI Analysis Settings</h3>
+          <div className="p-6 bg-gray-50 rounded-xl border border-gray-100">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-4">
                 <Switch 
                   checked={showReasoning} 
                   onCheckedChange={setShowReasoning}
                   id="show-reasoning"
                 />
                 <div>
-                  <label htmlFor="show-reasoning" className="font-medium text-blue-800">
+                  <label htmlFor="show-reasoning" className="font-medium text-gray-900">
                     Show AI Reasoning Process
                   </label>
-                  <p className="text-sm text-blue-600">
+                  <p className="text-sm text-gray-600 mt-1">
                     See step-by-step analysis and transparent decision-making
                   </p>
                 </div>
               </div>
-              <div className="text-blue-500">
+              <div className="text-2xl">
                 🧠
               </div>
             </div>
@@ -309,15 +309,15 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
         </div>
       </Card>
 
-      <Card className="bg-white/95 backdrop-blur-sm shadow-xl">
-        <div className="p-6">
-          <div className="h-96 overflow-y-auto mb-4 space-y-4">
+      <Card className="bg-white border border-gray-100 shadow-sm">
+        <div className="p-8">
+          <div className="h-96 overflow-y-auto mb-8 space-y-6">
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg p-3 max-w-xs">
+                <div className="bg-gray-50 rounded-xl p-4 max-w-xs">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
@@ -336,18 +336,18 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
             />
           )}
 
-          <form onSubmit={handleSubmit} className="flex space-x-2">
+          <form onSubmit={handleSubmit} className="flex space-x-4">
             <Textarea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Describe your startup idea in 1-2 lines..."
-              className="flex-1 min-h-[60px]"
+              className="flex-1 min-h-[80px] text-base"
               disabled={isLoading}
             />
             <Button 
               type="submit" 
               disabled={isLoading || !inputText.trim()}
-              className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+              className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 font-medium rounded-xl"
             >
               {isLoading ? 'Analyzing...' : 'Validate'}
             </Button>
