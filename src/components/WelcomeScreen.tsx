@@ -1,0 +1,57 @@
+
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+
+interface WelcomeScreenProps {
+  onStart: () => void;
+}
+
+export const WelcomeScreen = ({ onStart }: WelcomeScreenProps) => {
+  return (
+    <div className="max-w-4xl mx-auto text-center">
+      <div className="mb-12">
+        <h2 className="text-5xl font-bold text-white mb-6">
+          Validate Your Startup Idea
+          <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent"> Instantly</span>
+        </h2>
+        <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
+          Get AI-powered market insights, competitor analysis, and validation roadmap for your startup idea in minutes.
+        </p>
+        <Button 
+          onClick={onStart}
+          className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-8 py-3 text-lg font-semibold rounded-lg transition-all duration-200 transform hover:scale-105"
+        >
+          Start Validating →
+        </Button>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-6 text-left">
+          <h3 className="text-xl font-semibold text-white mb-3">🚀 Quick Scan</h3>
+          <p className="text-white/70">
+            Get instant feedback with a 3-bullet elevator pitch, top competitors, and major risks identified in seconds.
+          </p>
+        </Card>
+        <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-6 text-left">
+          <h3 className="text-xl font-semibold text-white mb-3">🔍 Deep Dive</h3>
+          <p className="text-white/70">
+            Comprehensive analysis including market size, user personas, go-to-market strategies, and next milestones.
+          </p>
+        </Card>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4 text-sm">
+        <div className="text-white/60">
+          ✓ Market Research
+        </div>
+        <div className="text-white/60">
+          ✓ Competitor Analysis
+        </div>
+        <div className="text-white/60">
+          ✓ Risk Assessment
+        </div>
+      </div>
+    </div>
+  );
+};
