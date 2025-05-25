@@ -63,24 +63,32 @@ export const ChatInterface = () => {
     
     try {
       const systemPrompt = isDeepDive 
-        ? `You are a startup validation expert. Analyze the given startup idea and provide:
-           1. Three-bullet elevator pitch summary
-           2. Two top competitors with brief descriptions
-           3. One major risk
-           4. Market size estimate with reasoning
-           5. Three user personas
-           6. Three go-to-market channels
-           7. Three next milestones
-           8. Your reasoning process (chain-of-thought)
-           
-           Format your response as JSON with keys: elevatorPitch, competitors, majorRisk, marketSize, userPersonas, gtmChannels, nextMilestones, reasoning`
-        : `You are a startup validation expert. Analyze the given startup idea and provide:
-           1. Three-bullet elevator pitch summary
-           2. Two top competitors with brief descriptions  
-           3. One major risk
-           4. Your reasoning process (chain-of-thought)
-           
-           Format your response as JSON with keys: elevatorPitch, competitors, majorRisk, reasoning`;
+        ? `You are a startup validation expert. Analyze the given startup idea and provide your response as a valid JSON object with NO markdown formatting, NO code blocks, NO explanations outside the JSON.
+
+           Required JSON structure:
+           {
+             "elevatorPitch": ["bullet point 1", "bullet point 2", "bullet point 3"],
+             "competitors": ["competitor 1 with description", "competitor 2 with description"],
+             "majorRisk": "single major risk description",
+             "marketSize": "market size estimate with reasoning",
+             "userPersonas": ["persona 1", "persona 2", "persona 3"],
+             "gtmChannels": ["channel 1", "channel 2", "channel 3"],
+             "nextMilestones": ["milestone 1", "milestone 2", "milestone 3"],
+             "reasoning": "your step-by-step reasoning process"
+           }
+
+           Return ONLY the JSON object, nothing else.`
+        : `You are a startup validation expert. Analyze the given startup idea and provide your response as a valid JSON object with NO markdown formatting, NO code blocks, NO explanations outside the JSON.
+
+           Required JSON structure:
+           {
+             "elevatorPitch": ["bullet point 1", "bullet point 2", "bullet point 3"],
+             "competitors": ["competitor 1 with description", "competitor 2 with description"],
+             "majorRisk": "single major risk description",
+             "reasoning": "your step-by-step reasoning process"
+           }
+
+           Return ONLY the JSON object, nothing else.`;
 
       const response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
@@ -115,7 +123,12 @@ export const ChatInterface = () => {
       }
 
       const data = await response.json();
-      const aiResponse = data.choices[0].message.content;
+      let aiResponse = data.choices[0].message.content;
+      
+      // Clean up the response to remove any markdown formatting
+      aiResponse = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').replace(/^###.*\n/gm, '').trim();
+      
+      console.log('Cleaned AI Response:', aiResponse);
       
       try {
         const parsedResult = JSON.parse(aiResponse);
@@ -123,6 +136,7 @@ export const ChatInterface = () => {
         addMessage(`${isDeepDive ? 'Deep dive' : 'Quick scan'} analysis complete! Here are your results:`, false);
       } catch (parseError) {
         console.error('Failed to parse AI response:', parseError);
+        console.error('Raw response:', aiResponse);
         addMessage("I've analyzed your idea, but had trouble formatting the results. Here's what I found: " + aiResponse, false);
       }
     } catch (error) {
