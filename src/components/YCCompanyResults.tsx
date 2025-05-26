@@ -27,36 +27,36 @@ export const YCCompanyResults: React.FC<YCCompanyResultsProps> = ({ searchResult
   }
 
   return (
-    <Card className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-sm">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
+    <div className="space-y-4">
+      <div className="p-4 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <span className="text-2xl">🚀</span>
-              Y Combinator Companies
-            </h3>
-            <p className="text-gray-600 mt-1">
+            <h4 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <span className="text-xl">🚀</span>
+              YC Companies
+            </h4>
+            <p className="text-gray-600 text-sm mt-1">
               Found {totalFound} companies matching "{searchTerm}" 
               {companies.length < totalFound && ` (showing top ${companies.length})`}
             </p>
           </div>
-          <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200">
+          <Badge variant="secondary" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
             YC Portfolio
           </Badge>
         </div>
 
-        <div className="grid gap-4">
+        <div className="space-y-3">
           {companies.map((company) => (
-            <Card key={company.id} className="bg-white border border-gray-200 hover:shadow-md transition-shadow">
-              <div className="p-5">
-                <div className="flex items-start gap-4">
+            <div key={company.id} className="bg-white border border-gray-200 hover:shadow-md transition-shadow rounded-xl">
+              <div className="p-4">
+                <div className="flex items-start gap-3">
                   {/* Company Logo */}
                   <div className="flex-shrink-0">
                     {company.small_logo_url ? (
                       <img 
                         src={company.small_logo_url} 
                         alt={`${company.name} logo`}
-                        className="w-12 h-12 rounded-lg object-cover border border-gray-200"
+                        className="w-10 h-10 rounded-lg object-cover border border-gray-200"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
@@ -64,22 +64,22 @@ export const YCCompanyResults: React.FC<YCCompanyResultsProps> = ({ searchResult
                         }}
                       />
                     ) : null}
-                    <div className={`w-12 h-12 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-lg ${company.small_logo_url ? 'hidden' : ''}`}>
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-sm ${company.small_logo_url ? 'hidden' : ''}`}>
                       {company.name.charAt(0).toUpperCase()}
                     </div>
                   </div>
 
                   {/* Company Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h4 className="text-lg font-semibold text-gray-900 truncate">
+                          <h5 className="text-base font-semibold text-gray-900 truncate">
                             {company.name}
-                          </h4>
+                          </h5>
                           {company.top_company && (
                             <Badge variant="default" className="bg-yellow-100 text-yellow-800 border-yellow-200 text-xs">
-                              ⭐ Top Company
+                              ⭐
                             </Badge>
                           )}
                           <Badge variant="outline" className="text-xs">
@@ -87,11 +87,11 @@ export const YCCompanyResults: React.FC<YCCompanyResultsProps> = ({ searchResult
                           </Badge>
                         </div>
                         
-                        <p className="text-gray-700 text-sm mb-3 line-clamp-2">
+                        <p className="text-gray-700 text-xs mb-2 line-clamp-2">
                           {company.one_liner}
                         </p>
 
-                        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 mb-3">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mb-2">
                           {company.location && (
                             <div className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
@@ -101,7 +101,7 @@ export const YCCompanyResults: React.FC<YCCompanyResultsProps> = ({ searchResult
                           {company.team_size > 0 && (
                             <div className="flex items-center gap-1">
                               <Users className="w-3 h-3" />
-                              <span>{company.team_size} employees</span>
+                              <span>{company.team_size}</span>
                             </div>
                           )}
                           <div className="flex items-center gap-1">
@@ -112,8 +112,8 @@ export const YCCompanyResults: React.FC<YCCompanyResultsProps> = ({ searchResult
 
                         {/* Tags */}
                         {company.tags && company.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-3">
-                            {company.tags.slice(0, 3).map((tag, index) => (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {company.tags.slice(0, 2).map((tag, index) => (
                               <Badge 
                                 key={index} 
                                 variant="secondary" 
@@ -122,9 +122,9 @@ export const YCCompanyResults: React.FC<YCCompanyResultsProps> = ({ searchResult
                                 {tag}
                               </Badge>
                             ))}
-                            {company.tags.length > 3 && (
+                            {company.tags.length > 2 && (
                               <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
-                                +{company.tags.length - 3} more
+                                +{company.tags.length - 2}
                               </Badge>
                             )}
                           </div>
@@ -139,45 +139,45 @@ export const YCCompanyResults: React.FC<YCCompanyResultsProps> = ({ searchResult
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-1">
                         {company.website && (
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-xs"
+                            className="text-xs h-7 px-2"
                             onClick={() => window.open(company.website, '_blank')}
                           >
                             <ExternalLink className="w-3 h-3 mr-1" />
-                            Website
+                            Site
                           </Button>
                         )}
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-xs"
+                          className="text-xs h-7 px-2"
                           onClick={() => window.open(company.url, '_blank')}
                         >
                           <ExternalLink className="w-3 h-3 mr-1" />
-                          YC Profile
+                          YC
                         </Button>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
 
         {totalFound > companies.length && (
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-600">
+          <div className="mt-3 text-center">
+            <p className="text-xs text-gray-600">
               Showing {companies.length} of {totalFound} companies. 
-              <span className="text-orange-600 font-medium"> Try a more specific search to see different results.</span>
+              <span className="text-orange-600 font-medium"> Try a more specific search for different results.</span>
             </p>
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }; 

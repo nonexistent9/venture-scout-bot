@@ -19,7 +19,7 @@ interface ValidationData {
 interface ValidationResultProps {
   data: ValidationData;
   showReasoning: boolean;
-  selectedModel: 'sonar-reasoning' | 'sonar-deep-research';
+  selectedModel: 'sonar-reasoning' | 'sonar-deep-research' | 'sonar';
 }
 
 export const ValidationResult = ({ data, showReasoning, selectedModel }: ValidationResultProps) => {
@@ -432,198 +432,200 @@ export const ValidationResult = ({ data, showReasoning, selectedModel }: Validat
   };
 
   return (
-    <div className="mt-8 space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <Card className="p-8 bg-gray-900 text-white border-0">
+      <div className="p-4 bg-gray-900 text-white rounded-xl">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-2xl font-semibold mb-3">
-              {selectedModel === 'sonar-deep-research' ? '🔍 Deep Research Analysis' : '🧠 Quick Reasoning Results'}
-            </h3>
-            <p className="text-gray-300">
+            <h4 className="text-lg font-semibold mb-1">
+              {selectedModel === 'sonar-deep-research' ? '🔍 Deep Research' : selectedModel === 'sonar' ? '🧠 Quick Analysis' : '🤔 Reasoning'}
+            </h4>
+            <p className="text-gray-300 text-sm">
               {selectedModel === 'sonar-deep-research' 
-                ? 'Comprehensive analysis with exhaustive research' 
-                : 'Fast Chain-of-Thought structured analysis'
+                ? 'Comprehensive research analysis' 
+                : selectedModel === 'sonar'
+                ? 'Fast Chain-of-Thought analysis'
+                : 'Reasoning analysis'
               }
             </p>
           </div>
-          <div className="flex space-x-3">
+          <div className="flex space-x-2">
             <Button 
               onClick={copyToClipboard}
               variant="outline" 
               size="sm"
-              className="text-black border-gray-600 hover:bg-gray-100 bg-white"
+              className="text-black border-gray-600 hover:bg-gray-100 bg-white text-xs"
             >
-              Copy Report
+              Copy
             </Button>
             <Button 
               onClick={exportToPDF}
               size="sm"
-              className="bg-white text-gray-900 hover:bg-gray-100"
+              className="bg-white text-gray-900 hover:bg-gray-100 text-xs"
             >
-              📄 Export PDF
+              📄 PDF
             </Button>
           </div>
         </div>
-      </Card>
+      </div>
 
       {/* Main Content */}
-      <div className="grid gap-6">
+      <div className="space-y-4">
         {/* Elevator Pitch */}
-        <Card className="p-8 bg-white border border-gray-100 shadow-sm">
-          <h4 className="font-semibold text-xl mb-6 text-gray-900 flex items-center">
-            <span className="text-2xl mr-3">🚀</span>Elevator Pitch
-          </h4>
-          <div className="space-y-4">
+        <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+          <h5 className="font-semibold text-base mb-3 text-gray-900 flex items-center">
+            <span className="text-lg mr-2">🚀</span>Elevator Pitch
+          </h5>
+          <div className="space-y-2">
             {data.elevatorPitch?.map((point, index) => (
-              <div key={index} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                <span className="flex-shrink-0 w-7 h-7 bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-medium">
+              <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <span className="flex-shrink-0 w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-xs font-medium">
                   {index + 1}
                 </span>
-                <span className="text-gray-800 font-medium leading-relaxed">{point}</span>
+                <span className="text-gray-800 text-sm leading-relaxed">{point}</span>
               </div>
             ))}
           </div>
-        </Card>
+        </div>
 
         {/* Competitors */}
-        <Card className="p-8 bg-white border border-gray-100 shadow-sm">
-          <h4 className="font-semibold text-xl mb-6 text-gray-900 flex items-center">
-            <span className="text-2xl mr-3">🏢</span>Top Competitors
-          </h4>
-          <div className="space-y-4">
+        <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+          <h5 className="font-semibold text-base mb-3 text-gray-900 flex items-center">
+            <span className="text-lg mr-2">🏢</span>Top Competitors
+          </h5>
+          <div className="space-y-2">
             {data.competitors?.map((competitor, index) => (
-              <div key={index} className="flex items-start space-x-4 p-5 bg-gray-50 rounded-xl border border-gray-100">
-                <span className="flex-shrink-0 w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center font-medium">
+              <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <span className="flex-shrink-0 w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-xs font-medium">
                   {index + 1}
                 </span>
-                <span className="text-gray-800 font-medium leading-relaxed">{competitor}</span>
+                <span className="text-gray-800 text-sm leading-relaxed">{competitor}</span>
               </div>
             ))}
           </div>
-        </Card>
+        </div>
 
         {/* Major Risk */}
-        <Card className="p-8 bg-white border border-gray-100 shadow-sm">
-          <h4 className="font-semibold text-xl mb-6 text-gray-900 flex items-center">
-            <span className="text-2xl mr-3">⚠️</span>Major Risk
-          </h4>
-          <div className="p-5 bg-gray-50 rounded-xl border border-gray-100">
-            <p className="text-gray-800 font-medium leading-relaxed">{data.majorRisk}</p>
+        <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+          <h5 className="font-semibold text-base mb-3 text-gray-900 flex items-center">
+            <span className="text-lg mr-2">⚠️</span>Major Risk
+          </h5>
+          <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <p className="text-gray-800 text-sm leading-relaxed">{data.majorRisk}</p>
           </div>
-        </Card>
+        </div>
 
         {/* Deep Research Content */}
         {selectedModel === 'sonar-deep-research' && (
           <>
             {data.marketSize && (
-              <Card className="p-8 bg-white border border-gray-100 shadow-sm">
-                <h4 className="font-semibold text-xl mb-6 text-gray-900 flex items-center">
-                  <span className="text-2xl mr-3">📊</span>Market Size
-                </h4>
-                <div className="p-5 bg-gray-50 rounded-xl border border-gray-100">
-                  <p className="text-gray-800 font-medium leading-relaxed">{data.marketSize}</p>
+              <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                <h5 className="font-semibold text-base mb-3 text-gray-900 flex items-center">
+                  <span className="text-lg mr-2">📊</span>Market Size
+                </h5>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                  <p className="text-gray-800 text-sm leading-relaxed">{data.marketSize}</p>
                 </div>
-              </Card>
+              </div>
             )}
 
             {data.userPersonas && (
-              <Card className="p-8 bg-white border border-gray-100 shadow-sm">
-                <h4 className="font-semibold text-xl mb-6 text-gray-900 flex items-center">
-                  <span className="text-2xl mr-3">👥</span>User Personas
-                </h4>
-                <div className="space-y-4">
+              <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                <h5 className="font-semibold text-base mb-3 text-gray-900 flex items-center">
+                  <span className="text-lg mr-2">👥</span>User Personas
+                </h5>
+                <div className="space-y-2">
                   {data.userPersonas.map((persona, index) => (
-                    <div key={index} className="flex items-start space-x-4 p-5 bg-gray-50 rounded-xl border border-gray-100">
-                      <span className="flex-shrink-0 w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center font-medium">
+                    <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      <span className="flex-shrink-0 w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-xs font-medium">
                         {index + 1}
                       </span>
-                      <span className="text-gray-800 font-medium leading-relaxed">{persona}</span>
+                      <span className="text-gray-800 text-sm leading-relaxed">{persona}</span>
                     </div>
                   ))}
                 </div>
-              </Card>
+              </div>
             )}
 
             {data.gtmChannels && (
-              <Card className="p-8 bg-white border border-gray-100 shadow-sm">
-                <h4 className="font-semibold text-xl mb-6 text-gray-900 flex items-center">
-                  <span className="text-2xl mr-3">📢</span>Go-to-Market Channels
-                </h4>
-                <div className="space-y-4">
+              <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                <h5 className="font-semibold text-base mb-3 text-gray-900 flex items-center">
+                  <span className="text-lg mr-2">📢</span>Go-to-Market
+                </h5>
+                <div className="space-y-2">
                   {data.gtmChannels.map((channel, index) => (
-                    <div key={index} className="flex items-start space-x-4 p-5 bg-gray-50 rounded-xl border border-gray-100">
-                      <span className="flex-shrink-0 w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center font-medium">
+                    <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      <span className="flex-shrink-0 w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-xs font-medium">
                         {index + 1}
                       </span>
-                      <span className="text-gray-800 font-medium leading-relaxed">{channel}</span>
+                      <span className="text-gray-800 text-sm leading-relaxed">{channel}</span>
                     </div>
                   ))}
                 </div>
-              </Card>
+              </div>
             )}
 
             {data.nextMilestones && (
-              <Card className="p-8 bg-white border border-gray-100 shadow-sm">
-                <h4 className="font-semibold text-xl mb-6 text-gray-900 flex items-center">
-                  <span className="text-2xl mr-3">🎯</span>Next Milestones
-                </h4>
-                <div className="space-y-4">
+              <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+                <h5 className="font-semibold text-base mb-3 text-gray-900 flex items-center">
+                  <span className="text-lg mr-2">🎯</span>Next Milestones
+                </h5>
+                <div className="space-y-2">
                   {data.nextMilestones.map((milestone, index) => (
-                    <div key={index} className="flex items-start space-x-4 p-5 bg-gray-50 rounded-xl border border-gray-100">
-                      <span className="flex-shrink-0 w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center font-medium">
+                    <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      <span className="flex-shrink-0 w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-xs font-medium">
                         {index + 1}
                       </span>
-                      <span className="text-gray-800 font-medium leading-relaxed">{milestone}</span>
+                      <span className="text-gray-800 text-sm leading-relaxed">{milestone}</span>
                     </div>
                   ))}
                 </div>
-              </Card>
+              </div>
             )}
           </>
         )}
 
         {/* AI Reasoning */}
         {showReasoning && data.reasoning && (
-          <Card className="p-8 bg-white border border-gray-100 shadow-sm">
-            <h4 className="font-semibold text-xl mb-6 text-gray-900 flex items-center">
-              <span className="text-2xl mr-3">🧠</span>AI Reasoning Process
-            </h4>
-            <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
-              <div className="flex items-start space-x-4 mb-4">
-                <div className="flex-shrink-0 w-10 h-10 bg-gray-900 text-white rounded-full flex items-center justify-center">
-                  <span className="text-lg">🤔</span>
+          <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+            <h5 className="font-semibold text-base mb-3 text-gray-900 flex items-center">
+              <span className="text-lg mr-2">🧠</span>AI Reasoning
+            </h5>
+            <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+              <div className="flex items-start space-x-3 mb-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center">
+                  <span className="text-sm">🤔</span>
                 </div>
                 <div className="flex-1">
-                  <h5 className="font-medium text-gray-900 mb-3">How I analyzed your startup idea:</h5>
+                  <h6 className="font-medium text-gray-900 mb-2 text-sm">Analysis Process:</h6>
                   <div className="prose prose-sm max-w-none">
-                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">{data.reasoning}</p>
+                    <p className="text-gray-700 text-xs leading-relaxed whitespace-pre-line">{data.reasoning}</p>
                   </div>
                 </div>
               </div>
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-500">
-                  This reasoning process shows the AI's step-by-step analysis to provide transparent and explainable insights.
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-xs text-gray-500">
+                  Transparent step-by-step AI analysis process.
                 </p>
               </div>
             </div>
-          </Card>
+          </div>
         )}
 
         {/* Sources */}
         {data.sources && data.sources.length > 0 && (
-          <Card className="p-8 bg-white border border-gray-100 shadow-sm">
-            <h4 className="font-semibold text-xl mb-6 text-gray-900 flex items-center">
-              <span className="text-2xl mr-3">📚</span>Research Sources
-            </h4>
-            <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
-              <p className="text-sm text-gray-600 mb-6 font-medium">
-                The analysis above is based on research from the following sources:
+          <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
+            <h5 className="font-semibold text-base mb-3 text-gray-900 flex items-center">
+              <span className="text-lg mr-2">📚</span>Sources
+            </h5>
+            <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+              <p className="text-xs text-gray-600 mb-3 font-medium">
+                Research sources used for this analysis:
               </p>
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {data.sources.map((source, index) => (
-                  <div key={index} className="flex items-start space-x-4 p-4 bg-white rounded-xl border border-gray-100">
-                    <span className="flex-shrink-0 w-7 h-7 bg-gray-900 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                  <div key={index} className="flex items-start space-x-3 p-2 bg-white rounded-lg border border-gray-100">
+                    <span className="flex-shrink-0 w-5 h-5 bg-gray-900 text-white rounded-full flex items-center justify-center text-xs font-medium">
                       {index + 1}
                     </span>
                     <div className="flex-1">
@@ -642,26 +644,26 @@ export const ValidationResult = ({ data, showReasoning, selectedModel }: Validat
                               href={url} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-gray-900 hover:text-gray-700 underline font-medium"
+                              className="text-gray-900 hover:text-gray-700 underline font-medium text-xs"
                             >
                               {displayTitle}
                             </a>
                           );
                         } else {
-                          return <span className="text-gray-800 font-medium">{source}</span>;
+                          return <span className="text-gray-800 font-medium text-xs">{source}</span>;
                         }
                       })()}
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <p className="text-sm text-gray-500">
-                  Sources are automatically gathered from real-time web research to ensure current and accurate information.
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <p className="text-xs text-gray-500">
+                  Real-time web research for current information.
                 </p>
               </div>
             </div>
-          </Card>
+          </div>
         )}
       </div>
     </div>
