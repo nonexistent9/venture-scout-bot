@@ -19,11 +19,11 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
     <div className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
       <div
         className={`${
-          isLongResponse ? 'max-w-4xl w-full' : 'max-w-xs lg:max-w-md'
-        } px-5 py-4 rounded-xl ${
+          isLongResponse ? 'max-w-full w-full' : 'max-w-xs'
+        } px-4 py-3 rounded-xl ${
           message.isUser
             ? 'bg-gray-900 text-white'
-            : 'bg-gray-50 text-gray-800 border border-gray-100'
+            : 'bg-white text-gray-800 border border-gray-200'
         }`}
       >
         {isLongResponse ? (
@@ -31,12 +31,12 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
             <ReactMarkdown
               components={{
                 h2: ({ children }) => (
-                  <h2 className="text-lg font-semibold text-gray-900 mt-6 mb-3 border-b border-gray-200 pb-2">
+                  <h2 className="text-base font-semibold text-gray-900 mt-4 mb-2 border-b border-gray-200 pb-1">
                     {children}
                   </h2>
                 ),
                 h3: ({ children }) => (
-                  <h3 className="text-base font-medium text-gray-800 mt-4 mb-2">
+                  <h3 className="text-sm font-medium text-gray-800 mt-3 mb-2">
                     {children}
                   </h3>
                 ),
@@ -44,13 +44,13 @@ export const ChatMessage = ({ message }: ChatMessageProps) => {
                   <strong className="font-semibold text-gray-900">{children}</strong>
                 ),
                 ul: ({ children }) => (
-                  <ul className="list-disc list-inside space-y-2 my-3">{children}</ul>
+                  <ul className="list-disc list-inside space-y-1 my-2">{children}</ul>
                 ),
                 li: ({ children }) => (
-                  <li className="text-gray-700 leading-relaxed">{children}</li>
+                  <li className="text-gray-700 leading-relaxed text-sm">{children}</li>
                 ),
                 p: ({ children }) => (
-                  <p className="text-gray-700 mb-3 leading-relaxed">{children}</p>
+                  <p className="text-gray-700 mb-2 leading-relaxed text-sm">{children}</p>
                 ),
                 a: ({ href, children }) => (
                   <a 

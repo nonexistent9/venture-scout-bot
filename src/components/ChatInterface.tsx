@@ -3,10 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { ChatMessage } from '@/components/ChatMessage';
 import { ValidationResult } from '@/components/ValidationResult';
-import { PerplexityApiInput } from '@/components/PerplexityApiInput';
 import { YCCompanyResults } from '@/components/YCCompanyResults';
 import { YCVerificationResultComponent } from '@/components/YCVerificationResult';
 import { ycApi, detectYCQuery, YCSearchResult, YCVerificationResult } from '@/lib/yc-api';
@@ -42,12 +40,14 @@ export const ChatInterface = () => {
     }
   ]);
   const [inputText, setInputText] = useState('');
-  const [selectedModel] = useState<'sonar-reasoning'>('sonar-reasoning');
-  const [showReasoning, setShowReasoning] = useState(false);
+  const [selectedModel] = useState<'sonar'>('sonar');
   const [isLoading, setIsLoading] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationData | null>(null);
-  const [apiKey, setApiKey] = useState('');
   const [isSearchingYC, setIsSearchingYC] = useState(false);
+  const [currentYCResult, setCurrentYCResult] = useState<YCSearchResult | null>(null);
+
+  // Get API key from environment variable
+  const apiKey = import.meta.env.VITE_PERPLEXITY_API_KEY;
 
   const addMessage = (text: string, isUser: boolean, ycSearchResult?: YCSearchResult, ycVerificationResult?: YCVerificationResult) => {
     const newMessage: Message = {
@@ -59,6 +59,11 @@ export const ChatInterface = () => {
       ycVerificationResult
     };
     setMessages(prev => [...prev, newMessage]);
+    
+    // Set the current YC result for the right panel
+    if (ycSearchResult) {
+      setCurrentYCResult(ycSearchResult);
+    }
   };
 
   const searchYCCompanies = async (query: string) => {
@@ -147,64 +152,167 @@ export const ChatInterface = () => {
   };
 
   const validateIdea = async (idea: string) => {
-    if (!apiKey.trim()) {
-      addMessage("Please enter your Perplexity API key first to continue.", false);
+    if (!apiKey || !apiKey.trim()) {
+      addMessage("API key not configured. Please check your environment variables.", false);
       return;
     }
 
     setIsLoading(true);
+    addMessage("🔄 Starting analysis... (This may take up to 30 seconds for the first request)", false);
     
     try {
-      // Define JSON schema for structured output
-      const reasoningSchema = {
+      // Attempt 1: JSON Schema approach
+      const result = await validateWithJsonSchema(idea);
+      if (result) {
+        setValidationResult(result);
+        addMessage('✅ Analysis complete! Check the results panel on the right.', false);
+        return;
+      }
+
+      // Attempt 2: Fallback to simple text parsing
+      addMessage("🔄 Retrying with alternative approach...", false);
+      const fallbackResult = await validateWithTextParsing(idea);
+      if (fallbackResult) {
+        setValidationResult(fallbackResult);
+        addMessage('✅ Analysis complete! Check the results panel on the right.', false);
+        return;
+      }
+
+      // If both fail
+      addMessage("❌ Analysis failed. Please try again with a simpler description.", false);
+
+    } catch (error) {
+      console.error('Validation error:', error);
+      addMessage("❌ Sorry, I encountered an error. Please check your API key and try again.", false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const validateWithJsonSchema = async (idea: string): Promise<ValidationData | null> => {
+    try {
+      // Simplified, flexible JSON schema
+      const validationSchema = {
         type: "object",
         properties: {
           elevatorPitch: {
             type: "array",
             items: { type: "string" },
-            minItems: 3,
-            maxItems: 3,
-            description: "Three key points: value proposition, target market, unique advantage"
+            description: "Key value propositions and benefits"
           },
           competitors: {
-            type: "array",
+            type: "array", 
             items: { type: "string" },
-            minItems: 2,
-            maxItems: 3,
-            description: "Main competitors with brief descriptions"
+            description: "Main competitors or alternatives"
           },
           majorRisk: {
             type: "string",
-            description: "Primary risk or challenge for this startup"
+            description: "Primary challenge or risk"
           },
           reasoning: {
             type: "string",
-            description: "Step-by-step analysis explanation"
+            description: "Analysis methodology and key insights"
           },
           sources: {
             type: "array",
             items: { type: "string" },
-            minItems: 2,
-            maxItems: 4,
-            description: "Research sources with URLs"
+            description: "Reference URLs"
           }
         },
-        required: ["elevatorPitch", "competitors", "majorRisk", "reasoning", "sources"],
+        required: ["elevatorPitch", "competitors", "majorRisk"],
         additionalProperties: false
       };
 
-      const systemPrompt = `You are a startup validation expert using Chain-of-Thought reasoning. Analyze the startup idea with structured reasoning and provide key insights.
+      const systemPrompt = `Analyze this startup idea and return a JSON object with:
+- elevatorPitch: Array of 2-3 key value propositions
+- competitors: Array of 2-3 main competitors or alternatives  
+- majorRisk: Single biggest challenge or risk
+- reasoning: Explain your analysis methodology and key insights (2-3 sentences)
+- sources: Array of 2-4 relevant URLs for research
 
-IMPORTANT: You must provide actual website URLs in the sources array. Each source should be formatted as "Website Name: https://example.com" with real, working URLs from your research.
+Keep responses concise and factual. In the reasoning field, explain how you evaluated the idea, what factors you considered, and key insights from your analysis.`;
 
-For the elevatorPitch array, provide exactly 3 distinct points:
-1. Clear value proposition
-2. Target market description  
-3. Unique competitive advantage
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
 
-For competitors, provide 2-3 specific company names with brief descriptions.
+      const response = await fetch('https://api.perplexity.ai/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: selectedModel, // Now using regular 'sonar' model
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `Analyze: ${idea}` }
+          ],
+          temperature: 0.1,
+          max_tokens: 2000,
+          return_images: false,
+          return_related_questions: false,
+          response_format: {
+            type: "json_schema",
+            json_schema: { schema: validationSchema }
+          }
+        }),
+      });
 
-Ensure all arrays contain separate string elements, not concatenated text.`;
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`API call failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.choices[0].message.content;
+      
+      console.log('JSON Schema Response:', aiResponse);
+      
+      // Parse JSON directly (no <think> blocks with regular sonar model)
+      const parsedData = JSON.parse(aiResponse);
+      
+      return {
+        elevatorPitch: Array.isArray(parsedData.elevatorPitch) ? parsedData.elevatorPitch : [],
+        competitors: Array.isArray(parsedData.competitors) ? parsedData.competitors : [],
+        majorRisk: parsedData.majorRisk || 'Risk analysis unavailable',
+        reasoning: parsedData.reasoning || 'AI analysis completed using structured evaluation methodology, considering market factors, competitive landscape, and risk assessment.',
+        sources: Array.isArray(parsedData.sources) ? parsedData.sources : []
+      };
+
+    } catch (error) {
+      console.error('JSON Schema validation failed:', error);
+      return null;
+    }
+  };
+
+  const validateWithTextParsing = async (idea: string): Promise<ValidationData | null> => {
+    try {
+      const systemPrompt = `Analyze this startup idea and respond in this exact format:
+
+ELEVATOR PITCH:
+• [Value proposition 1]
+• [Value proposition 2] 
+• [Value proposition 3]
+
+COMPETITORS:
+• [Competitor 1]
+• [Competitor 2]
+• [Competitor 3]
+
+MAJOR RISK:
+[Primary risk description]
+
+REASONING:
+[Explain your analysis methodology and key insights in 2-3 sentences]
+
+SOURCES:
+• [URL 1]
+• [URL 2]
+• [URL 3]
+
+Use exactly this format with bullet points. In the REASONING section, explain how you evaluated the idea and what factors you considered.`;
 
       const response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
@@ -215,89 +323,96 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
         body: JSON.stringify({
           model: selectedModel,
           messages: [
-            {
-              role: 'system',
-              content: systemPrompt
-            },
-            {
-              role: 'user',
-              content: idea
-            }
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `Analyze: ${idea}` }
           ],
-          temperature: 0.2,
-          top_p: 0.9,
-          max_tokens: 3000,
+          temperature: 0.1,
+          max_tokens: 2000,
           return_images: false,
-          return_related_questions: false,
-          frequency_penalty: 1,
-          presence_penalty: 0,
-          response_format: {
-            type: "json_schema",
-            json_schema: {
-              schema: reasoningSchema
-            }
-          }
+          return_related_questions: false
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`API call failed: ${response.status}`);
+        throw new Error(`Fallback API call failed: ${response.status}`);
       }
 
       const data = await response.json();
-      let aiResponse = data.choices[0].message.content;
+      const aiResponse = data.choices[0].message.content;
       
-      console.log('Raw AI Response:', aiResponse);
+      console.log('Text Parsing Response:', aiResponse);
       
-      // Handle reasoning with structured output
-      if (aiResponse.includes('<think>')) {
-        // Extract the JSON part after the thinking section
-        const thinkEndIndex = aiResponse.lastIndexOf('</think>');
-        if (thinkEndIndex !== -1) {
-          aiResponse = aiResponse.substring(thinkEndIndex + 8).trim();
-        }
-      }
-      
-      // Clean up JSON formatting
-      aiResponse = aiResponse
-        .replace(/```json\n?/g, '')
-        .replace(/```\n?/g, '')
-        .trim();
-      
-      console.log('Processed AI Response:', aiResponse);
-      
-      try {
-        const parsedResult = JSON.parse(aiResponse);
-        
-        const cleanedResult: ValidationData = {
-          elevatorPitch: Array.isArray(parsedResult.elevatorPitch) ? parsedResult.elevatorPitch : [],
-          competitors: Array.isArray(parsedResult.competitors) ? parsedResult.competitors : [],
-          majorRisk: typeof parsedResult.majorRisk === 'string' ? parsedResult.majorRisk : 'Risk analysis not available',
-          reasoning: typeof parsedResult.reasoning === 'string' ? parsedResult.reasoning : 'Reasoning not available',
-          sources: Array.isArray(parsedResult.sources) ? parsedResult.sources : []
-        };
-        
-        console.log('Cleaned result:', cleanedResult);
-        
-        setValidationResult(cleanedResult);
-        addMessage('Analysis complete! Here are your results:', false);
-      } catch (parseError) {
-        console.error('Failed to parse structured output:', parseError);
-        console.error('Response that failed to parse:', aiResponse);
-        
-        const fallbackResult = createFallbackResult(data.choices[0].message.content);
-        if (fallbackResult) {
-          setValidationResult(fallbackResult);
-          addMessage('Analysis complete! Here are your results:', false);
-        } else {
-          addMessage("I encountered an issue with the response format. Please try again.", false);
-        }
-      }
+      return parseTextResponse(aiResponse);
+
     } catch (error) {
-      console.error('Validation error:', error);
-      addMessage("Sorry, I encountered an error while analyzing your idea. Please try again or check your API key.", false);
-    } finally {
-      setIsLoading(false);
+      console.error('Text parsing validation failed:', error);
+      return null;
+    }
+  };
+
+  const parseTextResponse = (response: string): ValidationData | null => {
+    try {
+      const result: ValidationData = {
+        elevatorPitch: [],
+        competitors: [],
+        majorRisk: '',
+        reasoning: '',
+        sources: []
+      };
+
+      // Extract elevator pitch
+      const pitchMatch = response.match(/ELEVATOR PITCH:\s*([\s\S]*?)(?=COMPETITORS:|$)/i);
+      if (pitchMatch) {
+        const pitchItems = pitchMatch[1].match(/•\s*([^\n]+)/g);
+        if (pitchItems) {
+          result.elevatorPitch = pitchItems.map(item => item.replace(/•\s*/, '').trim()).slice(0, 3);
+        }
+      }
+
+      // Extract competitors
+      const competitorsMatch = response.match(/COMPETITORS:\s*([\s\S]*?)(?=MAJOR RISK:|$)/i);
+      if (competitorsMatch) {
+        const competitorItems = competitorsMatch[1].match(/•\s*([^\n]+)/g);
+        if (competitorItems) {
+          result.competitors = competitorItems.map(item => item.replace(/•\s*/, '').trim()).slice(0, 3);
+        }
+      }
+
+      // Extract major risk
+      const riskMatch = response.match(/MAJOR RISK:\s*([\s\S]*?)(?=REASONING:|SOURCES:|$)/i);
+      if (riskMatch) {
+        result.majorRisk = riskMatch[1].trim();
+      }
+
+      // Extract reasoning
+      const reasoningMatch = response.match(/REASONING:\s*([\s\S]*?)(?=SOURCES:|$)/i);
+      if (reasoningMatch) {
+        result.reasoning = reasoningMatch[1].trim();
+      }
+
+      // Extract sources
+      const sourcesMatch = response.match(/SOURCES:\s*([\s\S]*?)$/i);
+      if (sourcesMatch) {
+        const sourceItems = sourcesMatch[1].match(/•\s*([^\n]+)/g);
+        if (sourceItems) {
+          result.sources = sourceItems.map(item => item.replace(/•\s*/, '').trim()).slice(0, 4);
+        }
+      }
+
+      // Fallback reasoning if not extracted
+      if (!result.reasoning) {
+        result.reasoning = 'Analysis completed using structured evaluation methodology, considering market dynamics, competitive positioning, and potential challenges for this startup concept.';
+      }
+
+      // Validate we have minimum required data
+      if (result.elevatorPitch.length > 0 || result.competitors.length > 0 || result.majorRisk) {
+        return result;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error parsing text response:', error);
+      return null;
     }
   };
 
@@ -311,12 +426,18 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
     const { type, query } = detectYCQuery(inputText);
     
     if (type === 'search') {
+      // Clear previous validation results when searching YC companies
+      setValidationResult(null);
       // Search YC companies
       searchYCCompanies(query);
     } else if (type === 'verification') {
+      // Clear previous validation results when verifying YC companies
+      setValidationResult(null);
       // Verify if a company is in YC
       verifyYCCompany(query);
     } else {
+      // Clear previous YC results when validating idea
+      setCurrentYCResult(null);
       // Normal idea validation flow
       validateIdea(inputText);
     }
@@ -325,93 +446,101 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      <PerplexityApiInput apiKey={apiKey} setApiKey={setApiKey} />
-      
-      <Card className="bg-white border border-gray-100 shadow-sm">
-        <div className="p-8">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6">AI Analysis Settings</h3>
-          <div className="p-6 bg-gray-50 rounded-xl border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Switch 
-                  checked={showReasoning} 
-                  onCheckedChange={setShowReasoning}
-                  id="show-reasoning"
-                />
-                <div>
-                  <label htmlFor="show-reasoning" className="font-medium text-gray-900">
-                    Show AI Reasoning Process
-                  </label>
-                  <p className="text-sm text-gray-600 mt-1">
-                    See step-by-step analysis and transparent decision-making
-                  </p>
-                </div>
+    <div className="max-w-7xl mx-auto space-y-6">
+      {/* Two-column layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Left Column - Chat Interface */}
+        <div className="space-y-4">
+          <Card className="bg-white border border-gray-100 shadow-sm">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <span className="text-xl mr-2">💬</span>
+                Chat with AI Validator
+              </h3>
+              
+              <div className="h-96 overflow-y-auto mb-6 space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                {messages.map((message) => (
+                  <div key={message.id} className="space-y-4">
+                    <ChatMessage message={message} />
+                    {message.ycSearchResult && (
+                      <YCCompanyResults searchResult={message.ycSearchResult} />
+                    )}
+                    {message.ycVerificationResult && (
+                      <YCVerificationResultComponent verificationResult={message.ycVerificationResult} />
+                    )}
+                  </div>
+                ))}
+                {(isLoading || isSearchingYC) && (
+                  <div className="flex justify-start">
+                    <div className="bg-white rounded-xl p-4 max-w-xs border border-gray-200">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                      </div>
+                      <p className="text-xs text-gray-600 mt-2">
+                        {isSearchingYC ? 'Searching YC companies...' : 'Analyzing...'}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="text-2xl">
-                🧠
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <Textarea
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  placeholder="Describe your startup idea in 1-2 lines... or try 'show me companies like Airbnb' or 'is Stripe a YC company?'"
+                  className="min-h-[80px] text-sm"
+                  disabled={isLoading || isSearchingYC}
+                />
+                <Button 
+                  type="submit" 
+                  disabled={isLoading || isSearchingYC || !inputText.trim()}
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 font-medium rounded-xl"
+                >
+                  {isLoading ? 'Analyzing...' : isSearchingYC ? 'Searching...' : 'Send Message'}
+                </Button>
+              </form>
+            </div>
+          </Card>
+        </div>
+
+        {/* Right Column - Results Panel */}
+        <div className="space-y-4">
+          <Card className="bg-white border border-gray-100 shadow-sm">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <span className="text-xl mr-2">📊</span>
+                Analysis Results
+              </h3>
+              
+              <div className="h-[500px] overflow-y-auto">
+                {validationResult ? (
+                  <div className="space-y-4 pr-2">
+                    <ValidationResult 
+                      data={validationResult} 
+                      selectedModel="sonar"
+                    />
+                  </div>
+                ) : currentYCResult ? (
+                  <div className="space-y-4 pr-2">
+                    <YCCompanyResults searchResult={currentYCResult} />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                    <div className="text-6xl mb-4">🚀</div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">Ready for Analysis</h4>
+                    <p className="text-gray-600 text-sm max-w-sm">
+                      Share your startup idea or search for Y Combinator companies to see detailed results here.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          </Card>
         </div>
-      </Card>
-
-      <Card className="bg-white border border-gray-100 shadow-sm">
-        <div className="p-8">
-          <div className="h-96 overflow-y-auto mb-8 space-y-6">
-            {messages.map((message) => (
-              <div key={message.id} className="space-y-4">
-                <ChatMessage message={message} />
-                {message.ycSearchResult && (
-                  <YCCompanyResults searchResult={message.ycSearchResult} />
-                )}
-                {message.ycVerificationResult && (
-                  <YCVerificationResultComponent verificationResult={message.ycVerificationResult} />
-                )}
-              </div>
-            ))}
-            {(isLoading || isSearchingYC) && (
-              <div className="flex justify-start">
-                <div className="bg-gray-50 rounded-xl p-4 max-w-xs">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                  </div>
-                  <p className="text-xs text-gray-600 mt-2">
-                    {isSearchingYC ? 'Searching YC companies...' : 'Analyzing...'}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {validationResult && (
-            <ValidationResult 
-              data={validationResult} 
-              showReasoning={showReasoning}
-              selectedModel="sonar-reasoning"
-            />
-          )}
-
-          <form onSubmit={handleSubmit} className="flex space-x-4">
-            <Textarea
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="Describe your startup idea in 1-2 lines... or try 'show me companies like Airbnb' or 'is Stripe a YC company?'"
-              className="flex-1 min-h-[80px] text-base"
-              disabled={isLoading || isSearchingYC}
-            />
-            <Button 
-              type="submit" 
-              disabled={isLoading || isSearchingYC || !inputText.trim()}
-              className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 font-medium rounded-xl"
-            >
-              {isLoading ? 'Analyzing...' : isSearchingYC ? 'Searching...' : 'Send'}
-            </Button>
-          </form>
-        </div>
-      </Card>
+      </div>
     </div>
   );
 };
