@@ -9,6 +9,7 @@ import { KnowledgeResults } from '@/components/KnowledgeResults';
 import { FullTextView } from '@/components/FullTextView';
 import { vectorKnowledgeAPI, VectorSearchResult } from '@/lib/vector-knowledge';
 import { TextDotsLoader } from '@/components/ui/loader';
+import { BorderBeam } from '@/components/ui/border-beam';
 
 interface Message {
   id: string;
@@ -594,14 +595,15 @@ Use exactly this format with bullet points. In the REASONING section, explain ho
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Left Column - Chat Interface */}
         <div className="space-y-4">
-          <Card className="bg-white border border-gray-100 shadow-sm">
+          <Card className="relative bg-white border border-gray-100 shadow-sm">
+            <BorderBeam size={250} duration={12} colorFrom="#9c40ff" colorTo="#ffaa40" />
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <span className="text-xl mr-2">💬</span>
                 Chat with Startup Philosopher
               </h3>
               
-              <div className="h-96 overflow-y-auto mb-6 space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <div className="h-[300px] overflow-y-auto mb-6 space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
                 {messages.map((message) => (
                   <div key={message.id}>
                     <ChatMessage message={message} />
@@ -645,14 +647,15 @@ Use exactly this format with bullet points. In the REASONING section, explain ho
 
         {/* Right Column - Results Panel */}
         <div className="space-y-4">
-          <Card className="bg-white border border-gray-100 shadow-sm">
+          <Card className="relative bg-white border border-gray-100 shadow-sm">
+            <BorderBeam size={250} duration={15} colorFrom="#ffaa40" colorTo="#9c40ff" delay={2} />
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <span className="text-xl mr-2">📊</span>
                 Analysis Results
               </h3>
               
-              <div className="h-[500px] overflow-y-auto">
+              <div className="h-[440px] overflow-y-auto">
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center h-full text-center py-12">
                     <div className="mb-6">
