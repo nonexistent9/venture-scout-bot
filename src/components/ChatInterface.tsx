@@ -112,7 +112,7 @@ export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hi! I'm your Startup Idea Validator. Share your startup idea and I'll help you validate it with AI-powered analysis.\n\n💡 **Try:** \"/ask naval fundraising\" or \"/ask paul growth\"",
+      text: "Hi! I'm your Startup Philosopher. Share your startup idea and I'll help you validate it with AI-powered analysis.\n\n💡 **Try:** \"/ask naval fundraising\" or \"/ask paul growth\"",
       isUser: false,
       timestamp: new Date()
     }
@@ -303,21 +303,6 @@ export const ChatInterface = () => {
       if (result) {
         setValidationResult(result);
         addMessage('✅ Analysis complete! Check the results panel on the right.', false);
-        
-        // Get relevant knowledge suggestions based on the idea
-        const relevantKnowledge = await vectorKnowledgeAPI.getRelevantKnowledge(idea, 3);
-        if (relevantKnowledge.length > 0) {
-          const knowledgeResult: VectorSearchResult = {
-            items: relevantKnowledge,
-            totalFound: relevantKnowledge.length,
-            query: 'contextual suggestions',
-            searchTime: 0
-          };
-          // Add knowledge suggestions as a separate message after a short delay
-          setTimeout(() => {
-            addMessage("💡 Here's some relevant startup advice based on your idea:", false, knowledgeResult);
-          }, 1500);
-        }
         return;
       }
 
@@ -327,21 +312,6 @@ export const ChatInterface = () => {
       if (fallbackResult) {
         setValidationResult(fallbackResult);
         addMessage('✅ Analysis complete! Check the results panel on the right.', false);
-        
-        // Get relevant knowledge suggestions based on the idea
-        const relevantKnowledge = await vectorKnowledgeAPI.getRelevantKnowledge(idea, 3);
-        if (relevantKnowledge.length > 0) {
-          const knowledgeResult: VectorSearchResult = {
-            items: relevantKnowledge,
-            totalFound: relevantKnowledge.length,
-            query: 'contextual suggestions',
-            searchTime: 0
-          };
-          // Add knowledge suggestions as a separate message after a short delay
-          setTimeout(() => {
-            addMessage("💡 Here's some relevant startup advice based on your idea:", false, knowledgeResult);
-          }, 2000);
-        }
         return;
       }
 
@@ -627,7 +597,7 @@ Use exactly this format with bullet points. In the REASONING section, explain ho
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <span className="text-xl mr-2">💬</span>
-                Chat with AI Validator
+                Chat with Startup Philosopher
               </h3>
               
               <div className="h-96 overflow-y-auto mb-6 space-y-4 p-4 bg-gray-50 rounded-xl border border-gray-100">

@@ -12,9 +12,9 @@ export const Header = () => {
           <div className="flex items-center space-x-4">
             <Link to="/" className="flex items-center space-x-4">
               <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center">
-                <span className="text-white font-semibold text-lg">SV</span>
+                <span className="text-white font-semibold text-lg">🚀</span>
               </div>
-              <h1 className="text-2xl font-semibold text-gray-900">Startup Idea Validator</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">Startup Philosopher</h1>
             </Link>
           </div>
           
@@ -25,7 +25,7 @@ export const Header = () => {
                   variant={location.pathname === '/' ? 'default' : 'ghost'}
                   size="sm"
                 >
-                  Validator
+                  Philosopher
                 </Button>
               </Link>
               <Link to="/startups">
@@ -39,7 +39,7 @@ export const Header = () => {
             </nav>
             
             <div className="text-sm text-gray-500 font-medium">
-              Powered by AI • Early Stage Validation
+              Powered by AI • Wisdom from Paul Graham & Naval
             </div>
           </div>
         </div>
