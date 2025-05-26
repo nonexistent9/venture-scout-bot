@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { ChatMessage } from '@/components/ChatMessage';
 import { ValidationResult } from '@/components/ValidationResult';
 import { YCCompanyResults } from '@/components/YCCompanyResults';
@@ -40,7 +39,6 @@ export const ChatInterface = () => {
   ]);
   const [inputText, setInputText] = useState('');
   const [selectedModel] = useState<'sonar'>('sonar');
-  const [showReasoning, setShowReasoning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationData | null>(null);
   const [isSearchingYC, setIsSearchingYC] = useState(false);
@@ -195,6 +193,10 @@ export const ChatInterface = () => {
             type: "string",
             description: "Primary challenge or risk"
           },
+          reasoning: {
+            type: "string",
+            description: "Analysis methodology and key insights"
+          },
           sources: {
             type: "array",
             items: { type: "string" },
@@ -209,9 +211,10 @@ export const ChatInterface = () => {
 - elevatorPitch: Array of 2-3 key value propositions
 - competitors: Array of 2-3 main competitors or alternatives  
 - majorRisk: Single biggest challenge or risk
+- reasoning: Explain your analysis methodology and key insights (2-3 sentences)
 - sources: Array of 2-4 relevant URLs for research
 
-Keep responses concise and factual.`;
+Keep responses concise and factual. In the reasoning field, explain how you evaluated the idea, what factors you considered, and key insights from your analysis.`;
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
@@ -258,7 +261,7 @@ Keep responses concise and factual.`;
         elevatorPitch: Array.isArray(parsedData.elevatorPitch) ? parsedData.elevatorPitch : [],
         competitors: Array.isArray(parsedData.competitors) ? parsedData.competitors : [],
         majorRisk: parsedData.majorRisk || 'Risk analysis unavailable',
-        reasoning: 'Analysis completed using structured AI evaluation',
+        reasoning: parsedData.reasoning || 'AI analysis completed using structured evaluation methodology, considering market factors, competitive landscape, and risk assessment.',
         sources: Array.isArray(parsedData.sources) ? parsedData.sources : []
       };
 
@@ -285,12 +288,15 @@ COMPETITORS:
 MAJOR RISK:
 [Primary risk description]
 
+REASONING:
+[Explain your analysis methodology and key insights in 2-3 sentences]
+
 SOURCES:
 • [URL 1]
 • [URL 2]
 • [URL 3]
 
-Use exactly this format with bullet points.`;
+Use exactly this format with bullet points. In the REASONING section, explain how you evaluated the idea and what factors you considered.`;
 
       const response = await fetch('https://api.perplexity.ai/chat/completions', {
         method: 'POST',
@@ -334,7 +340,7 @@ Use exactly this format with bullet points.`;
         elevatorPitch: [],
         competitors: [],
         majorRisk: '',
-        reasoning: 'Parsed from structured text response',
+        reasoning: '',
         sources: []
       };
 
@@ -357,9 +363,15 @@ Use exactly this format with bullet points.`;
       }
 
       // Extract major risk
-      const riskMatch = response.match(/MAJOR RISK:\s*([\s\S]*?)(?=SOURCES:|$)/i);
+      const riskMatch = response.match(/MAJOR RISK:\s*([\s\S]*?)(?=REASONING:|SOURCES:|$)/i);
       if (riskMatch) {
         result.majorRisk = riskMatch[1].trim();
+      }
+
+      // Extract reasoning
+      const reasoningMatch = response.match(/REASONING:\s*([\s\S]*?)(?=SOURCES:|$)/i);
+      if (reasoningMatch) {
+        result.reasoning = reasoningMatch[1].trim();
       }
 
       // Extract sources
@@ -369,6 +381,11 @@ Use exactly this format with bullet points.`;
         if (sourceItems) {
           result.sources = sourceItems.map(item => item.replace(/•\s*/, '').trim()).slice(0, 4);
         }
+      }
+
+      // Fallback reasoning if not extracted
+      if (!result.reasoning) {
+        result.reasoning = 'Analysis completed using structured evaluation methodology, considering market dynamics, competitive positioning, and potential challenges for this startup concept.';
       }
 
       // Validate we have minimum required data
@@ -409,34 +426,6 @@ Use exactly this format with bullet points.`;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      <Card className="bg-white border border-gray-100 shadow-sm">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Analysis Settings</h3>
-          <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Switch 
-                  checked={showReasoning} 
-                  onCheckedChange={setShowReasoning}
-                  id="show-reasoning"
-                />
-                <div>
-                  <label htmlFor="show-reasoning" className="font-medium text-gray-900 text-sm">
-                    Show AI Reasoning Process
-                  </label>
-                  <p className="text-xs text-gray-600 mt-1">
-                    See step-by-step analysis and transparent decision-making
-                  </p>
-                </div>
-              </div>
-              <div className="text-xl">
-                🧠
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
-
       {/* Two-column layout */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Left Column - Chat Interface */}
@@ -502,7 +491,6 @@ Use exactly this format with bullet points.`;
                   <div className="space-y-4 pr-2">
                     <ValidationResult 
                       data={validationResult} 
-                      showReasoning={showReasoning}
                       selectedModel="sonar"
                     />
                   </div>

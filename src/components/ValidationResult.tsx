@@ -18,11 +18,10 @@ interface ValidationData {
 
 interface ValidationResultProps {
   data: ValidationData;
-  showReasoning: boolean;
   selectedModel: 'sonar-reasoning' | 'sonar-deep-research' | 'sonar';
 }
 
-export const ValidationResult = ({ data, showReasoning, selectedModel }: ValidationResultProps) => {
+export const ValidationResult = ({ data, selectedModel }: ValidationResultProps) => {
   const exportToPDF = () => {
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -221,7 +220,7 @@ export const ValidationResult = ({ data, showReasoning, selectedModel }: Validat
       if (data.nextMilestones?.length) sections.push('7. Next Milestones');
     }
     
-    if (showReasoning && data.reasoning) sections.push(`${sections.length + 1}. AI Analysis Reasoning`);
+    if (data.reasoning) sections.push(`${sections.length + 1}. AI Analysis Reasoning`);
     if (data.sources?.length) sections.push(`${sections.length + 1}. Research Sources`);
     
     sections.forEach(section => {
@@ -320,8 +319,8 @@ export const ValidationResult = ({ data, showReasoning, selectedModel }: Validat
       }
     }
 
-    // AI Reasoning (if shown)
-    if (showReasoning && data.reasoning) {
+    // AI Reasoning - Always included
+    if (data.reasoning) {
       addSectionHeader('AI ANALYSIS REASONING', colors.secondary);
       addText('Detailed analytical reasoning and methodology:', 9, false, 0, colors.gray);
       addSpacing(5);
@@ -417,7 +416,7 @@ export const ValidationResult = ({ data, showReasoning, selectedModel }: Validat
       }
     }
     
-    if (showReasoning && data.reasoning) {
+    if (data.reasoning) {
       content += `\nAI REASONING:\n${data.reasoning}\n`;
     }
     
@@ -585,8 +584,8 @@ export const ValidationResult = ({ data, showReasoning, selectedModel }: Validat
           </>
         )}
 
-        {/* AI Reasoning */}
-        {showReasoning && data.reasoning && (
+        {/* AI Reasoning - Always visible */}
+        {data.reasoning && (
           <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm">
             <h5 className="font-semibold text-base mb-3 text-gray-900 flex items-center">
               <span className="text-lg mr-2">🧠</span>AI Reasoning
