@@ -60,6 +60,51 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## RAG Knowledge Base Setup
+
+This project includes a RAG (Retrieval-Augmented Generation) system that provides semantic search over startup knowledge from Paul Graham essays and Naval Ravikant content.
+
+### Prerequisites
+
+1. **OpenAI API Key**: Required for generating embeddings
+2. **Perplexity API Key**: Required for startup idea validation
+
+### Setup Steps
+
+1. **Set Environment Variables**:
+   Create a `.env` file in the root directory:
+   ```
+   VITE_PERPLEXITY_API_KEY=your_perplexity_api_key_here
+   OPENAI_API_KEY=your_openai_api_key_here
+   ```
+
+2. **Generate Embeddings**:
+   ```sh
+   npm run generate-embeddings
+   ```
+   This will:
+   - Process all knowledge files in the `/knowledge` directory
+   - Generate OpenAI embeddings for semantic search
+   - Create a `knowledge-embeddings.json` file
+   - Take a few minutes to complete
+
+3. **Start the Application**:
+   ```sh
+   npm run dev
+   ```
+
+### Knowledge Base Features
+
+- **Semantic Search**: Ask questions like "What does Paul Graham say about startups?"
+- **Contextual Suggestions**: Get relevant advice after validating startup ideas
+- **Multiple Content Types**: Essays, passages, and clips from startup experts
+- **Topic-based Organization**: Content categorized by startup themes
+
+### Knowledge Sources
+
+- **Paul Graham Essays**: 150+ essays on startups, entrepreneurship, and technology
+- **Naval Ravikant Content**: Curated passages and clips on business and life philosophy
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/f90ebc5a-aff3-4118-b95e-79bf883b7f24) and click on Share -> Publish.
