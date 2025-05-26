@@ -1,6 +1,6 @@
 import React from 'react';
 import { TextLoop } from '@/components/ui/text-loop';
-import { Button } from '@/components/ui/button';
+import { MagnetizeButton } from '@/components/ui/magnetize-button';
 import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
@@ -11,10 +11,7 @@ const Index = () => {
     navigate('/chat');
   };
 
-  const handleBrowseYC = () => {
-    // Navigate to the YC companies page
-    navigate('/startups');
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-transparent flex flex-col items-center justify-center px-6">
@@ -32,23 +29,16 @@ const Index = () => {
           </h1>
         </div>
 
-        {/* Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button 
+        {/* Button */}
+        <div className="flex justify-center">
+          <MagnetizeButton 
             onClick={handleStartValidating}
-            size="lg"
-            className="px-8 py-4 text-lg font-semibold bg-black hover:bg-gray-800 text-white font-mono"
+            className="px-8 py-4 text-lg font-semibold bg-black hover:bg-gray-800 text-white border-black font-mono min-w-48 [&>div]:bg-gradient-to-r [&>div]:from-purple-400 [&>div]:to-purple-600 [&>span>svg]:text-white"
+            particleCount={15}
+            attractRadius={60}
           >
-            Start Validating
-          </Button>
-          <Button 
-            onClick={handleBrowseYC}
-            variant="outline"
-            size="lg"
-            className="px-8 py-4 text-lg font-semibold border-black text-black hover:bg-gray-100 font-mono"
-          >
-            Browse YC Companies
-          </Button>
+            Start Building
+          </MagnetizeButton>
         </div>
       </div>
     </div>
