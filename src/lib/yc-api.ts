@@ -155,7 +155,8 @@ export const ycApi = new YCApiService();
 export const detectYCSearchTriggers = (message: string): { shouldSearch: boolean; searchQuery: string } => {
   const lowerMessage = message.toLowerCase();
   
-  const triggers = [
+  // Primary triggers - explicit search phrases
+  const primaryTriggers = [
     'show me companies like',
     'find companies like',
     'yc companies doing',
@@ -176,15 +177,30 @@ export const detectYCSearchTriggers = (message: string): { shouldSearch: boolean
     'show me startups',
     'find me companies',
     'search yc',
-    'search y combinator'
+    'search y combinator',
+    'lookup yc',
+    'look up yc',
+    'yc search',
+    'ycombinator search'
   ];
 
-  const foundTrigger = triggers.find(trigger => lowerMessage.includes(trigger));
+  // YC-specific keywords that when combined with action words should trigger search
+  const ycKeywords = ['yc', 'ycombinator', 'y combinator', 'y-combinator'];
+  const actionWords = [
+    'find', 'search', 'look', 'lookup', 'show', 'get', 'fetch', 'give',
+    'list', 'display', 'tell', 'what', 'which', 'any', 'are there'
+  ];
+  const targetWords = [
+    'companies', 'startups', 'company', 'startup', 'firms', 'businesses'
+  ];
+
+  // Check for primary triggers first
+  const foundPrimaryTrigger = primaryTriggers.find(trigger => lowerMessage.includes(trigger));
   
-  if (foundTrigger) {
+  if (foundPrimaryTrigger) {
     // Extract the search query after the trigger
-    const triggerIndex = lowerMessage.indexOf(foundTrigger);
-    const afterTrigger = message.substring(triggerIndex + foundTrigger.length).trim();
+    const triggerIndex = lowerMessage.indexOf(foundPrimaryTrigger);
+    const afterTrigger = message.substring(triggerIndex + foundPrimaryTrigger.length).trim();
     
     // Clean up common words
     const cleanedQuery = afterTrigger
@@ -193,9 +209,69 @@ export const detectYCSearchTriggers = (message: string): { shouldSearch: boolean
     
     return {
       shouldSearch: true,
-      searchQuery: cleanedQuery || message
+      searchQuery: cleanedQuery || extractMainSearchTerm(message)
     };
   }
 
+  // Check for YC-specific patterns (YC + action + target)
+  const hasYCKeyword = ycKeywords.some(keyword => lowerMessage.includes(keyword));
+  const hasActionWord = actionWords.some(action => lowerMessage.includes(action));
+  const hasTargetWord = targetWords.some(target => lowerMessage.includes(target));
+
+  if (hasYCKeyword && hasActionWord && hasTargetWord) {
+    return {
+      shouldSearch: true,
+      searchQuery: extractMainSearchTerm(message)
+    };
+  }
+
+  // Check for simple YC mentions with search intent
+  if (hasYCKeyword) {
+    // Look for patterns like "any yc companies that...", "yc companies in...", etc.
+    const searchPatterns = [
+      /yc?\s+(companies?|startups?)\s+(that|doing|in|for|with|like)/i,
+      /(any|some|which)\s+yc?\s+(companies?|startups?)/i,
+      /yc?\s+(companies?|startups?)\s+similar/i,
+      /(show|find|get|list)\s+.*yc/i,
+      /yc.*\s+(similar|like|doing|in)\s+/i
+    ];
+
+    const hasSearchPattern = searchPatterns.some(pattern => pattern.test(lowerMessage));
+    
+    if (hasSearchPattern) {
+      return {
+        shouldSearch: true,
+        searchQuery: extractMainSearchTerm(message)
+      };
+    }
+  }
+
   return { shouldSearch: false, searchQuery: '' };
+};
+
+// Helper function to extract the main search term from a message
+const extractMainSearchTerm = (message: string): string => {
+  const lowerMessage = message.toLowerCase();
+  
+  // Remove common YC-related prefixes
+  let cleanedMessage = message
+    .replace(/^(show me|find me|get me|list|display|tell me about|what are|which are|any)\s+/i, '')
+    .replace(/\b(yc|ycombinator|y combinator|y-combinator)\s+(companies?|startups?)\s+/i, '')
+    .replace(/\b(companies?|startups?)\s+(that|doing|in|for|with|like|similar to)\s+/i, '')
+    .replace(/^(that|which|who|doing|in|for|with|are|is)\s+/i, '')
+    .trim();
+
+  // If the cleaned message is too short or generic, try to extract key terms
+  if (cleanedMessage.length < 3) {
+    // Look for industry terms, technology terms, or company names
+    const words = message.split(/\s+/);
+    const meaningfulWords = words.filter(word => 
+      word.length > 2 && 
+      !['the', 'and', 'for', 'are', 'that', 'with', 'like', 'yc', 'companies', 'startups'].includes(word.toLowerCase())
+    );
+    
+    cleanedMessage = meaningfulWords.slice(-3).join(' '); // Take last 3 meaningful words
+  }
+
+  return cleanedMessage || message;
 }; 
