@@ -2,14 +2,20 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Users, MapPin, Calendar } from 'lucide-react';
+import { ExternalLink, Users, MapPin, Calendar, ChevronDown } from 'lucide-react';
 import { YCSearchResult } from '@/lib/yc-api';
 
 interface YCCompanyResultsProps {
   searchResult: YCSearchResult;
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
 }
 
-export const YCCompanyResults: React.FC<YCCompanyResultsProps> = ({ searchResult }) => {
+export const YCCompanyResults: React.FC<YCCompanyResultsProps> = ({ 
+  searchResult, 
+  onLoadMore, 
+  isLoadingMore = false 
+}) => {
   const { companies, searchTerm, totalFound } = searchResult;
 
   if (companies.length === 0) {
@@ -170,11 +176,38 @@ export const YCCompanyResults: React.FC<YCCompanyResultsProps> = ({ searchResult
         </div>
 
         {totalFound > companies.length && (
-          <div className="mt-3 text-center">
-            <p className="text-xs text-gray-600">
-              Showing {companies.length} of {totalFound} companies. 
-              <span className="text-orange-600 font-medium"> Try a more specific search for different results.</span>
-            </p>
+          <div className="mt-4 space-y-3">
+            <div className="text-center">
+              <p className="text-xs text-gray-600 mb-3">
+                Showing {companies.length} of {totalFound} companies
+              </p>
+              {onLoadMore && (
+                <Button
+                  onClick={onLoadMore}
+                  disabled={isLoadingMore}
+                  variant="outline"
+                  size="sm"
+                  className="bg-white hover:bg-orange-50 border-orange-200 text-orange-700 hover:text-orange-800"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin mr-2" />
+                      Loading more...
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4 mr-2" />
+                      Show More ({Math.min(20, totalFound - companies.length)} more)
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-gray-500">
+                <span className="text-orange-600 font-medium">💡 Tip:</span> Try a more specific search for different results
+              </p>
+            </div>
           </div>
         )}
       </div>

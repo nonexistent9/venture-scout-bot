@@ -45,6 +45,9 @@ export const ChatInterface = () => {
   const [validationResult, setValidationResult] = useState<ValidationData | null>(null);
   const [isSearchingYC, setIsSearchingYC] = useState(false);
   const [currentYCResult, setCurrentYCResult] = useState<YCSearchResult | null>(null);
+  const [currentSearchQuery, setCurrentSearchQuery] = useState<string>('');
+  const [currentSearchLimit, setCurrentSearchLimit] = useState<number>(8);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Get API key from environment variable
   const apiKey = import.meta.env.VITE_PERPLEXITY_API_KEY;
@@ -66,16 +69,53 @@ export const ChatInterface = () => {
     }
   };
 
-  const searchYCCompanies = async (query: string) => {
+  const searchYCCompanies = async (query: string, limit: number = 8) => {
     setIsSearchingYC(true);
     try {
-      const searchResult = await ycApi.searchCompanies(query, 8);
+      const searchResult = await ycApi.searchCompanies(query, limit);
+      setCurrentSearchQuery(query);
+      setCurrentSearchLimit(limit);
       addMessage(`Found ${searchResult.totalFound} Y Combinator companies related to "${query}"`, false, searchResult);
     } catch (error) {
       console.error('Error searching YC companies:', error);
       addMessage("Sorry, I couldn't search Y Combinator companies right now. Please try again later.", false);
     } finally {
       setIsSearchingYC(false);
+    }
+  };
+
+  const loadMoreYCResults = async () => {
+    if (!currentSearchQuery || !currentYCResult) return;
+    
+    setIsLoadingMore(true);
+    try {
+      const newLimit = currentSearchLimit + 20; // Load 20 more results
+      const searchResult = await ycApi.searchCompanies(currentSearchQuery, newLimit);
+      setCurrentSearchLimit(newLimit);
+      
+      // Update the current result and the message
+      setCurrentYCResult(searchResult);
+      
+      // Update the last message with YC search results
+      setMessages(prev => {
+        const newMessages = [...prev];
+        // Find the last message with YC search results (reverse search)
+        for (let i = newMessages.length - 1; i >= 0; i--) {
+          if (newMessages[i].ycSearchResult) {
+            newMessages[i] = {
+              ...newMessages[i],
+              ycSearchResult: searchResult
+            };
+            break;
+          }
+        }
+        return newMessages;
+      });
+    } catch (error) {
+      console.error('Error loading more YC companies:', error);
+      addMessage("Sorry, I couldn't load more companies right now. Please try again later.", false);
+    } finally {
+      setIsLoadingMore(false);
     }
   };
 
@@ -428,16 +468,23 @@ Use exactly this format with bullet points. In the REASONING section, explain ho
     if (type === 'search') {
       // Clear previous validation results when searching YC companies
       setValidationResult(null);
+      // Reset search state for new search
+      setCurrentSearchLimit(8);
+      setCurrentSearchQuery('');
       // Search YC companies
       searchYCCompanies(query);
     } else if (type === 'verification') {
       // Clear previous validation results when verifying YC companies
       setValidationResult(null);
+      // Clear YC search state when verifying
+      setCurrentYCResult(null);
+      setCurrentSearchQuery('');
       // Verify if a company is in YC
       verifyYCCompany(query);
     } else {
       // Clear previous YC results when validating idea
       setCurrentYCResult(null);
+      setCurrentSearchQuery('');
       // Normal idea validation flow
       validateIdea(inputText);
     }
@@ -463,7 +510,11 @@ Use exactly this format with bullet points. In the REASONING section, explain ho
                   <div key={message.id} className="space-y-4">
                     <ChatMessage message={message} />
                     {message.ycSearchResult && (
-                      <YCCompanyResults searchResult={message.ycSearchResult} />
+                      <YCCompanyResults 
+                        searchResult={message.ycSearchResult} 
+                        onLoadMore={loadMoreYCResults}
+                        isLoadingMore={isLoadingMore}
+                      />
                     )}
                     {message.ycVerificationResult && (
                       <YCVerificationResultComponent verificationResult={message.ycVerificationResult} />
@@ -525,7 +576,11 @@ Use exactly this format with bullet points. In the REASONING section, explain ho
                   </div>
                 ) : currentYCResult ? (
                   <div className="space-y-4 pr-2">
-                    <YCCompanyResults searchResult={currentYCResult} />
+                    <YCCompanyResults 
+                      searchResult={currentYCResult} 
+                      onLoadMore={loadMoreYCResults}
+                      isLoadingMore={isLoadingMore}
+                    />
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full text-center py-12">
