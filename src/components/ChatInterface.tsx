@@ -8,6 +8,7 @@ import { ValidationResult } from '@/components/ValidationResult';
 import { KnowledgeResults } from '@/components/KnowledgeResults';
 import { FullTextView } from '@/components/FullTextView';
 import { vectorKnowledgeAPI, VectorSearchResult } from '@/lib/vector-knowledge';
+import { TextDotsLoader } from '@/components/ui/loader';
 
 interface Message {
   id: string;
@@ -652,7 +653,21 @@ Use exactly this format with bullet points. In the REASONING section, explain ho
               </h3>
               
               <div className="h-[500px] overflow-y-auto">
-                {fullTextView ? (
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                    <div className="mb-6">
+                      <TextDotsLoader 
+                        text="Analyzing your startup idea" 
+                        size="lg" 
+                        className="text-gray-900"
+                      />
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">AI Analysis in Progress</h4>
+                    <p className="text-gray-600 text-sm max-w-sm">
+                      Our AI is evaluating your idea, researching competitors, and identifying key insights. This may take up to 30 seconds.
+                    </p>
+                  </div>
+                ) : fullTextView ? (
                   <FullTextView
                     item={fullTextView.item}
                     fullText={fullTextView.fullText}

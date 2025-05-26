@@ -20,9 +20,9 @@ export const Header = () => {
           
           <div className="flex items-center space-x-6">
             <nav className="flex items-center space-x-4">
-              <Link to="/">
+              <Link to="/chat">
                 <Button 
-                  variant={location.pathname === '/' ? 'default' : 'ghost'}
+                  variant={location.pathname === '/chat' ? 'default' : 'ghost'}
                   size="sm"
                 >
                   Philosopher
