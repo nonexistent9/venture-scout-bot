@@ -8,12 +8,15 @@ import { Switch } from '@/components/ui/switch';
 import { ChatMessage } from '@/components/ChatMessage';
 import { ValidationResult } from '@/components/ValidationResult';
 import { PerplexityApiInput } from '@/components/PerplexityApiInput';
+import { YCCompanyResults } from '@/components/YCCompanyResults';
+import { ycApi, detectYCSearchTriggers, YCSearchResult } from '@/lib/yc-api';
 
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  ycSearchResult?: YCSearchResult;
 }
 
 interface ValidationData {
@@ -32,7 +35,7 @@ export const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hi! I'm your Startup Idea Validator. Share your startup idea (1-2 lines) and I'll help you validate it with AI-powered analysis and structured insights.",
+      text: "Hi! I'm your Startup Idea Validator. Share your startup idea (1-2 lines) and I'll help you validate it with AI-powered analysis and structured insights.\n\n💡 **Pro tip:** You can also search Y Combinator companies by saying things like:\n• \"Show me companies like Airbnb\"\n• \"Find YC companies doing AI\"\n• \"Companies in fintech\"",
       isUser: false,
       timestamp: new Date()
     }
@@ -43,15 +46,30 @@ export const ChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationData | null>(null);
   const [apiKey, setApiKey] = useState('');
+  const [isSearchingYC, setIsSearchingYC] = useState(false);
 
-  const addMessage = (text: string, isUser: boolean) => {
+  const addMessage = (text: string, isUser: boolean, ycSearchResult?: YCSearchResult) => {
     const newMessage: Message = {
       id: Date.now().toString(),
       text,
       isUser,
-      timestamp: new Date()
+      timestamp: new Date(),
+      ycSearchResult
     };
     setMessages(prev => [...prev, newMessage]);
+  };
+
+  const searchYCCompanies = async (query: string) => {
+    setIsSearchingYC(true);
+    try {
+      const searchResult = await ycApi.searchCompanies(query, 8);
+      addMessage(`Found ${searchResult.totalFound} Y Combinator companies related to "${query}"`, false, searchResult);
+    } catch (error) {
+      console.error('Error searching YC companies:', error);
+      addMessage("Sorry, I couldn't search Y Combinator companies right now. Please try again later.", false);
+    } finally {
+      setIsSearchingYC(false);
+    }
   };
 
   const createFallbackResult = (rawResponse: string): ValidationData | null => {
@@ -273,7 +291,18 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
     if (!inputText.trim()) return;
 
     addMessage(inputText, true);
-    validateIdea(inputText);
+    
+    // Check if the message contains YC search triggers
+    const { shouldSearch, searchQuery } = detectYCSearchTriggers(inputText);
+    
+    if (shouldSearch) {
+      // Search YC companies instead of validating idea
+      searchYCCompanies(searchQuery);
+    } else {
+      // Normal idea validation flow
+      validateIdea(inputText);
+    }
+    
     setInputText('');
   };
 
@@ -313,9 +342,14 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
         <div className="p-8">
           <div className="h-96 overflow-y-auto mb-8 space-y-6">
             {messages.map((message) => (
-              <ChatMessage key={message.id} message={message} />
+              <div key={message.id} className="space-y-4">
+                <ChatMessage message={message} />
+                {message.ycSearchResult && (
+                  <YCCompanyResults searchResult={message.ycSearchResult} />
+                )}
+              </div>
             ))}
-            {isLoading && (
+            {(isLoading || isSearchingYC) && (
               <div className="flex justify-start">
                 <div className="bg-gray-50 rounded-xl p-4 max-w-xs">
                   <div className="flex space-x-1">
@@ -323,6 +357,9 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                   </div>
+                  <p className="text-xs text-gray-600 mt-2">
+                    {isSearchingYC ? 'Searching YC companies...' : 'Analyzing...'}
+                  </p>
                 </div>
               </div>
             )}
@@ -340,16 +377,16 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
             <Textarea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Describe your startup idea in 1-2 lines..."
+              placeholder="Describe your startup idea in 1-2 lines... or try 'show me companies like Airbnb' to search YC companies!"
               className="flex-1 min-h-[80px] text-base"
-              disabled={isLoading}
+              disabled={isLoading || isSearchingYC}
             />
             <Button 
               type="submit" 
-              disabled={isLoading || !inputText.trim()}
+              disabled={isLoading || isSearchingYC || !inputText.trim()}
               className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 font-medium rounded-xl"
             >
-              {isLoading ? 'Analyzing...' : 'Validate'}
+              {isLoading ? 'Analyzing...' : isSearchingYC ? 'Searching...' : 'Send'}
             </Button>
           </form>
         </div>
