@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +8,8 @@ import { ChatMessage } from '@/components/ChatMessage';
 import { ValidationResult } from '@/components/ValidationResult';
 import { PerplexityApiInput } from '@/components/PerplexityApiInput';
 import { YCCompanyResults } from '@/components/YCCompanyResults';
-import { ycApi, detectYCSearchTriggers, YCSearchResult } from '@/lib/yc-api';
+import { YCVerificationResultComponent } from '@/components/YCVerificationResult';
+import { ycApi, detectYCQuery, YCSearchResult, YCVerificationResult } from '@/lib/yc-api';
 
 interface Message {
   id: string;
@@ -17,6 +17,7 @@ interface Message {
   isUser: boolean;
   timestamp: Date;
   ycSearchResult?: YCSearchResult;
+  ycVerificationResult?: YCVerificationResult;
 }
 
 interface ValidationData {
@@ -48,13 +49,14 @@ export const ChatInterface = () => {
   const [apiKey, setApiKey] = useState('');
   const [isSearchingYC, setIsSearchingYC] = useState(false);
 
-  const addMessage = (text: string, isUser: boolean, ycSearchResult?: YCSearchResult) => {
+  const addMessage = (text: string, isUser: boolean, ycSearchResult?: YCSearchResult, ycVerificationResult?: YCVerificationResult) => {
     const newMessage: Message = {
       id: Date.now().toString(),
       text,
       isUser,
       timestamp: new Date(),
-      ycSearchResult
+      ycSearchResult,
+      ycVerificationResult
     };
     setMessages(prev => [...prev, newMessage]);
   };
@@ -67,6 +69,19 @@ export const ChatInterface = () => {
     } catch (error) {
       console.error('Error searching YC companies:', error);
       addMessage("Sorry, I couldn't search Y Combinator companies right now. Please try again later.", false);
+    } finally {
+      setIsSearchingYC(false);
+    }
+  };
+
+  const verifyYCCompany = async (companyName: string) => {
+    setIsSearchingYC(true);
+    try {
+      const verificationResult = await ycApi.verifyCompany(companyName);
+      addMessage('', false, undefined, verificationResult);
+    } catch (error) {
+      console.error('Error verifying YC company:', error);
+      addMessage("Sorry, I couldn't verify the company right now. Please try again later.", false);
     } finally {
       setIsSearchingYC(false);
     }
@@ -292,12 +307,15 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
 
     addMessage(inputText, true);
     
-    // Check if the message contains YC search triggers
-    const { shouldSearch, searchQuery } = detectYCSearchTriggers(inputText);
+    // Check if the message contains YC queries
+    const { type, query } = detectYCQuery(inputText);
     
-    if (shouldSearch) {
-      // Search YC companies instead of validating idea
-      searchYCCompanies(searchQuery);
+    if (type === 'search') {
+      // Search YC companies
+      searchYCCompanies(query);
+    } else if (type === 'verification') {
+      // Verify if a company is in YC
+      verifyYCCompany(query);
     } else {
       // Normal idea validation flow
       validateIdea(inputText);
@@ -347,6 +365,9 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
                 {message.ycSearchResult && (
                   <YCCompanyResults searchResult={message.ycSearchResult} />
                 )}
+                {message.ycVerificationResult && (
+                  <YCVerificationResultComponent verificationResult={message.ycVerificationResult} />
+                )}
               </div>
             ))}
             {(isLoading || isSearchingYC) && (
@@ -377,7 +398,7 @@ Ensure all arrays contain separate string elements, not concatenated text.`;
             <Textarea
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder="Describe your startup idea in 1-2 lines... or try 'show me companies like Airbnb' to search YC companies!"
+              placeholder="Describe your startup idea in 1-2 lines... or try 'show me companies like Airbnb' or 'is Stripe a YC company?'"
               className="flex-1 min-h-[80px] text-base"
               disabled={isLoading || isSearchingYC}
             />
