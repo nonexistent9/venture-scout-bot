@@ -36,6 +36,14 @@ export const Header = () => {
                   YC Directory
                 </Button>
               </Link>
+              <Link to="/business-model-canvas">
+                <Button 
+                  variant={location.pathname === '/business-model-canvas' ? 'default' : 'ghost'}
+                  size="sm"
+                >
+                  Business Canvas
+                </Button>
+              </Link>
             </nav>
             
             <div className="text-sm text-gray-500 font-medium">
