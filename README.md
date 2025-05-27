@@ -1,118 +1,205 @@
-# Welcome to your Lovable project
+# 🚀 Venture Scout Bot
 
-## Project info
+> **An AI-powered startup validation platform that helps entrepreneurs validate ideas, research markets, and build business models using the wisdom of Paul Graham and Naval Ravikant.**
 
-**URL**: https://lovable.dev/projects/f90ebc5a-aff3-4118-b95e-79bf883b7f24
+[![React](https://img.shields.io/badge/React-18.3.1-blue)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-5.4.1-purple)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.11-cyan)](https://tailwindcss.com/)
 
-## How can I edit this code?
+## 📋 Overview
 
-There are several ways of editing your application.
+Venture Scout Bot is a comprehensive startup validation platform that combines AI-powered chat interface, market research capabilities, and business model generation. It features a curated knowledge base from startup experts Paul Graham (150+ essays) and Naval Ravikant, plus access to Y Combinator's startup directory.
 
-**Use Lovable**
+## ✨ Key Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f90ebc5a-aff3-4118-b95e-79bf883b7f24) and start prompting.
+### 🤖 **AI Chat Interface**
+- Interactive chat powered by Paul Graham essays and Naval Ravikant content
+- Semantic search through 150+ startup essays
+- Real-time startup advice and validation
+- Context-aware responses based on expert knowledge
 
-Changes made via Lovable will be committed automatically to this repo.
+### 📊 **Market Validation Dashboard**
+- **Real-time market intelligence** with validation scores (0-100)
+- **Interactive visualizations** including market trends and competitor analysis
+- **AI-powered insights** with opportunities, challenges, and next steps
+- **Sentiment analysis** from news and social media sources
+- Market size (TAM) calculations and growth rate analysis
 
-**Use your preferred IDE**
+### 🏢 **Y Combinator Startup Directory**
+- Browse and search through **all Y Combinator companies**
+- Filter by industry, batch, and company size
+- View company details, websites, and funding information
+- Discover top companies and trending startups
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 📝 **Business Model Canvas Generator**
+- **AI-generated business model canvases** based on your startup idea
+- Complete 9-block canvas with executive summary
+- **PDF export functionality** for presentations and planning
+- Research-backed recommendations with source citations
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 🔍 **Intelligent Knowledge Base**
+- **150+ Paul Graham essays** on startups and entrepreneurship
+- **Naval Ravikant passages and clips** on business philosophy
+- **Semantic search capabilities** for finding relevant advice
+- Context-aware suggestions after idea validation
 
-Follow these steps:
+## 🛠 Technology Stack
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **State Management**: TanStack React Query
+- **Routing**: React Router DOM
+- **AI Integration**: OpenAI API for embeddings
+- **Data Visualization**: Recharts
+- **PDF Generation**: jsPDF
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🚀 Quick Start
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Prerequisites
+- Node.js 18+ and npm (install with [nvm](https://github.com/nvm-sh/nvm))
+- API keys (see Environment Setup below)
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### Installation
+
+```bash
+# Clone the repository
+git clone <your-git-url>
+cd venture-scout-bot
+
+# Install dependencies
+npm install
+
+# Set up environment variables (see below)
+cp .env.example .env.local
+
+# Generate knowledge base embeddings
+npm run generate-embeddings
+
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Environment Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Create a `.env.local` file with the following API keys:
 
-**Use GitHub Codespaces**
+```bash
+# Required for market validation and AI analysis
+VITE_PERPLEXITY_API_KEY=your_perplexity_api_key_here
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Required for knowledge base embeddings
+OPENAI_API_KEY=your_openai_api_key_here
+```
 
-## What technologies are used for this project?
+#### Getting API Keys
 
-This project is built with:
+1. **Perplexity API** (for market validation):
+   - Visit [Perplexity API Settings](https://www.perplexity.ai/settings/api)
+   - Create account and generate API key (starts with `pplx-`)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+2. **OpenAI API** (for knowledge base):
+   - Visit [OpenAI API Platform](https://platform.openai.com/api-keys)
+   - Create account and generate API key (starts with `sk-`)
 
-## RAG Knowledge Base Setup
+## 📁 Project Structure
 
-This project includes a RAG (Retrieval-Augmented Generation) system that provides semantic search over startup knowledge from Paul Graham essays and Naval Ravikant content.
+```
+src/
+├── components/           # Reusable UI components
+├── pages/               # Main application pages
+│   ├── Index.tsx        # Landing page with animated intro
+│   ├── Chat.tsx         # AI chat interface
+│   ├── Startups.tsx     # YC startup directory
+│   ├── MarketResearch.tsx    # Market validation dashboard
+│   └── BusinessModelCanvas.tsx    # Business model generator
+├── lib/                 # Utilities and API services
+├── hooks/               # Custom React hooks
+└── knowledge/           # Paul Graham essays and Naval content
+```
 
-### Prerequisites
+## 🎯 Usage Guide
 
-1. **OpenAI API Key**: Required for generating embeddings
-2. **Perplexity API Key**: Required for startup idea validation
+### 1. **Startup Idea Validation**
+1. Enter your startup idea in the chat interface
+2. Get instant AI-powered feedback based on expert knowledge
+3. Access market validation dashboard for comprehensive analysis
+4. Generate business model canvas for strategic planning
 
-### Setup Steps
+### 2. **Market Research**
+1. Navigate to Market Research from chat results
+2. View validation scores, market size, and growth rates
+3. Analyze competitor landscape and market sentiment
+4. Review AI-generated opportunities and challenges
 
-1. **Set Environment Variables**:
-   Create a `.env` file in the root directory:
-   ```
-   VITE_PERPLEXITY_API_KEY=your_perplexity_api_key_here
-   OPENAI_API_KEY=your_openai_api_key_here
-   ```
+### 3. **Startup Discovery**
+1. Browse Y Combinator startup directory
+2. Filter by industry, batch year, or company characteristics
+3. Research successful companies in your space
+4. Identify market trends and validation patterns
 
-2. **Generate Embeddings**:
-   ```sh
-   npm run generate-embeddings
-   ```
-   This will:
-   - Process all knowledge files in the `/knowledge` directory
-   - Generate OpenAI embeddings for semantic search
-   - Create a `knowledge-embeddings.json` file
-   - Take a few minutes to complete
+### 4. **Knowledge Base Search**
+1. Ask specific questions about startups and entrepreneurship
+2. Get contextual advice from Paul Graham and Naval Ravikant
+3. Explore essays and insights relevant to your situation
+4. Build on proven startup methodologies
 
-3. **Start the Application**:
-   ```sh
-   npm run dev
-   ```
+## 🔧 Available Scripts
+
+```bash
+npm run dev              # Start development server
+npm run build            # Build for production
+npm run preview          # Preview production build
+npm run lint             # Run ESLint
+npm run generate-embeddings    # Generate knowledge base embeddings
+```
+
+## 🌟 Key Features Deep Dive
+
+### Market Validation Dashboard
+- **Validation Score**: 0-100 score based on market analysis
+- **Market Metrics**: TAM, growth rate, risk assessment
+- **Visual Charts**: Trends, segments, competitive landscape
+- **AI Insights**: Opportunities, challenges, next steps
 
 ### Knowledge Base Features
+- **Semantic Search**: Natural language queries
+- **Contextual Suggestions**: Relevant advice after validation
+- **Expert Content**: Curated from 150+ essays and passages
+- **Topic Organization**: Categorized by startup themes
 
-- **Semantic Search**: Ask questions like "What does Paul Graham say about startups?"
-- **Contextual Suggestions**: Get relevant advice after validating startup ideas
-- **Multiple Content Types**: Essays, passages, and clips from startup experts
-- **Topic-based Organization**: Content categorized by startup themes
+### Business Model Canvas
+- **AI Generation**: Complete 9-block canvas creation
+- **Research-Backed**: Citations and source references
+- **PDF Export**: Professional presentation format
+- **Executive Summary**: Comprehensive business overview
 
-### Knowledge Sources
+## 🔄 Fallback Behavior
 
-- **Paul Graham Essays**: 150+ essays on startups, entrepreneurship, and technology
-- **Naval Ravikant Content**: Curated passages and clips on business and life philosophy
+- **Missing API Keys**: Intelligent mock data with warnings
+- **API Failures**: Graceful fallbacks with error handling
+- **Offline Mode**: Cached knowledge base still functional
+- **Rate Limits**: Smart request management and retries
 
-## How can I deploy this project?
+## 🚀 Deployment
 
-Simply open [Lovable](https://lovable.dev/projects/f90ebc5a-aff3-4118-b95e-79bf883b7f24) and click on Share -> Publish.
+The application is configured for deployment on various platforms:
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+# Build for production
+npm run build
 
-Yes, you can!
+# Deploy to your preferred platform
+# (Vercel, Netlify, AWS, etc.)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🙏 Acknowledgments
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- **Paul Graham** - Essays and startup wisdom
+- **Naval Ravikant** - Business philosophy and insights  
+- **Y Combinator** - Startup data and inspiration
+- **OpenAI** - AI capabilities and embeddings
+- **Perplexity** - Real-time market intelligence
+
+---
+
+**Built with ❤️ for entrepreneurs and startup enthusiasts**
