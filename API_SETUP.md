@@ -1,21 +1,23 @@
 # API Setup Instructions
 
-## Setting up your Perplexity API Key
+## Real-Time Market Validation Dashboard Setup
 
-To use the Startup Idea Validator, you need to configure your Perplexity API key locally.
+To use the Market Validation Dashboard with real data, you only need to configure your Perplexity API key.
 
 ### Step 1: Get your API Key
+
+#### Perplexity API (for all real-time data and AI analysis)
 1. Go to [Perplexity API Settings](https://www.perplexity.ai/settings/api)
 2. Create an account if you don't have one
-3. Generate a new API key
+3. Generate a new API key (starts with `pplx-`)
 
 ### Step 2: Create Environment File
 1. In your project root directory (same level as `package.json`), create a file named `.env.local`
-2. Add the following line to the file:
+2. Add your API key to the file:
    ```
-   VITE_PERPLEXITY_API_KEY=your_actual_api_key_here
+   VITE_PERPLEXITY_API_KEY=your_perplexity_api_key_here
    ```
-3. Replace `your_actual_api_key_here` with your actual Perplexity API key
+3. Replace the placeholder value with your actual API key
 
 ### Step 3: Restart Development Server
 After creating the `.env.local` file, restart your development server:
@@ -25,13 +27,34 @@ npm run dev
 
 ### Example `.env.local` file:
 ```
+# Perplexity API Key for all real-time data and AI analysis
 VITE_PERPLEXITY_API_KEY=pplx-1234567890abcdef1234567890abcdef
 ```
 
+### What Perplexity API Provides:
+
+#### Comprehensive Market Intelligence:
+- **Google Trends Analysis**: AI-powered search interest trends over time
+- **Competitor Research**: Real-time competitor discovery and analysis
+- **Market Segments**: Industry-specific market segmentation
+- **Sentiment Analysis**: Current market sentiment from news and social media
+- **Market Metrics**: AI-powered market size and growth analysis
+- **Strategic Insights**: AI-generated opportunities, challenges, and next steps
+
+### Fallback Behavior:
+- If API keys are missing, the dashboard will use intelligent mock data
+- Each API call has error handling and graceful fallbacks
+- The system will log warnings when using mock data instead of real APIs
+
 ### Important Notes:
 - The `.env.local` file should NOT be committed to version control
-- Make sure your API key starts with `pplx-`
 - The environment variable must be prefixed with `VITE_` to be accessible in the browser
 - Restart the dev server after making changes to environment variables
+- Perplexity has usage limits - check your dashboard for current usage
 
-That's it! Your API key is now configured and the ugly input field has been removed from the UI. 
+### Cost Considerations:
+- **Perplexity**: Pay-per-request model, very affordable for development
+- Typically costs less than $0.01 per market validation request
+- Free tier available for testing and development
+
+That's it! Your real-time market validation dashboard is now configured with live data sources. 
