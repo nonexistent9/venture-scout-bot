@@ -9,13 +9,15 @@
 
 ## 📋 Overview
 
-Venture Scout Bot is a comprehensive startup validation platform that combines AI-powered chat interface, market research capabilities, and business model generation. It features a curated knowledge base from startup experts Paul Graham (150+ essays) and Naval Ravikant, plus access to Y Combinator's startup directory.
+Venture Scout Bot is a comprehensive startup validation platform that combines AI-powered chat interface, market research capabilities, and business model generation. It features a curated knowledge base from startup experts Paul Graham (229 essays) and Naval Ravikant (412 pieces), plus access to Y Combinator's startup directory.
+
+**✨ Now OpenAI-Free!** The knowledge base uses intelligent keyword-based search, making it completely independent of external AI services while maintaining excellent search accuracy.
 
 ## ✨ Key Features
 
 ### 🤖 **AI Chat Interface**
 - Interactive chat powered by Paul Graham essays and Naval Ravikant content
-- Semantic search through 150+ startup essays
+- **Smart keyword search** through 229 startup essays and 412 Naval pieces
 - Real-time startup advice and validation
 - Context-aware responses based on expert knowledge
 
@@ -39,10 +41,11 @@ Venture Scout Bot is a comprehensive startup validation platform that combines A
 - Research-backed recommendations with source citations
 
 ### 🔍 **Intelligent Knowledge Base**
-- **150+ Paul Graham essays** on startups and entrepreneurship
-- **Naval Ravikant passages and clips** on business philosophy
-- **Semantic search capabilities** for finding relevant advice
+- **229 Paul Graham essays** on startups and entrepreneurship
+- **412 Naval Ravikant passages and clips** on business philosophy
+- **Advanced keyword search** with fuzzy matching and relevance scoring
 - Context-aware suggestions after idea validation
+- **No external API dependencies** for knowledge base functionality
 
 ## 🛠 Technology Stack
 
@@ -50,7 +53,7 @@ Venture Scout Bot is a comprehensive startup validation platform that combines A
 - **Styling**: Tailwind CSS + shadcn/ui components
 - **State Management**: TanStack React Query
 - **Routing**: React Router DOM
-- **AI Integration**: OpenAI API for embeddings
+- **Knowledge Search**: Advanced keyword matching with topic analysis
 - **Data Visualization**: Recharts
 - **PDF Generation**: jsPDF
 
@@ -58,7 +61,7 @@ Venture Scout Bot is a comprehensive startup validation platform that combines A
 
 ### Prerequisites
 - Node.js 18+ and npm (install with [nvm](https://github.com/nvm-sh/nvm))
-- API keys (see Environment Setup below)
+- Perplexity API key (for market validation only)
 
 ### Installation
 
@@ -70,11 +73,8 @@ cd venture-scout-bot
 # Install dependencies
 npm install
 
-# Set up environment variables (see below)
-cp .env.example .env.local
-
-# Generate knowledge base embeddings
-npm run generate-embeddings
+# Generate knowledge base (no API key needed!)
+npm run generate-embeddings-no-openai
 
 # Start development server
 npm run dev
@@ -82,14 +82,11 @@ npm run dev
 
 ### Environment Setup
 
-Create a `.env.local` file with the following API keys:
+Create a `.env.local` file with the following API key:
 
 ```bash
 # Required for market validation and AI analysis
 VITE_PERPLEXITY_API_KEY=your_perplexity_api_key_here
-
-# Required for knowledge base embeddings
-OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 #### Getting API Keys
@@ -98,9 +95,7 @@ OPENAI_API_KEY=your_openai_api_key_here
    - Visit [Perplexity API Settings](https://www.perplexity.ai/settings/api)
    - Create account and generate API key (starts with `pplx-`)
 
-2. **OpenAI API** (for knowledge base):
-   - Visit [OpenAI API Platform](https://platform.openai.com/api-keys)
-   - Create account and generate API key (starts with `sk-`)
+**Note**: OpenAI API is no longer required! The knowledge base now uses intelligent keyword search.
 
 ## 📁 Project Structure
 
@@ -147,11 +142,12 @@ src/
 ## 🔧 Available Scripts
 
 ```bash
-npm run dev              # Start development server
-npm run build            # Build for production
-npm run preview          # Preview production build
-npm run lint             # Run ESLint
-npm run generate-embeddings    # Generate knowledge base embeddings
+npm run dev                        # Start development server
+npm run build                      # Build for production
+npm run preview                    # Preview production build
+npm run lint                       # Run ESLint
+npm run generate-embeddings-no-openai  # Generate knowledge base (no API key needed)
+npm run generate-embeddings-cohere     # Alternative: Generate with Cohere embeddings
 ```
 
 ## 🌟 Key Features Deep Dive
@@ -163,10 +159,11 @@ npm run generate-embeddings    # Generate knowledge base embeddings
 - **AI Insights**: Opportunities, challenges, next steps
 
 ### Knowledge Base Features
-- **Semantic Search**: Natural language queries
+- **Advanced Keyword Search**: Multi-factor relevance scoring
+- **Topic Analysis**: Automatic categorization and matching
 - **Contextual Suggestions**: Relevant advice after validation
-- **Expert Content**: Curated from 150+ essays and passages
-- **Topic Organization**: Categorized by startup themes
+- **Expert Content**: Curated from 229 essays and 412 passages
+- **No API Dependencies**: Works completely offline for knowledge search
 
 ### Business Model Canvas
 - **AI Generation**: Complete 9-block canvas creation
@@ -176,9 +173,9 @@ npm run generate-embeddings    # Generate knowledge base embeddings
 
 ## 🔄 Fallback Behavior
 
-- **Missing API Keys**: Intelligent mock data with warnings
+- **Missing API Keys**: Knowledge base still works, market validation shows mock data
 - **API Failures**: Graceful fallbacks with error handling
-- **Offline Mode**: Cached knowledge base still functional
+- **Offline Mode**: Full knowledge base functionality available
 - **Rate Limits**: Smart request management and retries
 
 ## 🚀 Deployment
@@ -191,15 +188,25 @@ npm run build
 
 # Deploy to your preferred platform
 # (Vercel, Netlify, AWS, etc.)
+```
+
+## 📊 Knowledge Base Statistics
+
+- **Paul Graham**: 229 essays, 957 searchable chunks
+- **Naval Ravikant**: 412 pieces (196 passages + 216 clips)
+- **Total Content**: 1,369 searchable items
+- **Search Method**: Advanced keyword matching with topic analysis
+- **File Size**: 4.45 MB (optimized for fast loading)
 
 ## 🙏 Acknowledgments
 
 - **Paul Graham** - Essays and startup wisdom
 - **Naval Ravikant** - Business philosophy and insights  
 - **Y Combinator** - Startup data and inspiration
-- **OpenAI** - AI capabilities and embeddings
 - **Perplexity** - Real-time market intelligence
 
 ---
 
 **Built with ❤️ for entrepreneurs and startup enthusiasts**
+
+*No OpenAI API required - completely self-contained knowledge base!*
