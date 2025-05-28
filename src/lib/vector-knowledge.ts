@@ -1,5 +1,3 @@
-import OpenAI from 'openai';
-
 // Types for our knowledge system
 export interface KnowledgeItem {
   id: string;
@@ -11,7 +9,6 @@ export interface KnowledgeItem {
   source: string;
   chunkIndex: number;
   totalChunks: number;
-  embedding?: number[];
 }
 
 export interface KnowledgeDatabase {
@@ -21,6 +18,7 @@ export interface KnowledgeDatabase {
     embeddingModel: string;
     chunkSize: number;
     overlap: number;
+    searchMethod?: string;
   };
   items: KnowledgeItem[];
 }
@@ -40,18 +38,10 @@ export interface VectorSearchResult {
 
 class VectorKnowledgeAPI {
   private knowledgeDB: KnowledgeDatabase | null = null;
-  private openai: OpenAI | null = null;
   private isLoaded = false;
 
   constructor() {
-    // Initialize OpenAI client if API key is available
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-    if (apiKey) {
-      this.openai = new OpenAI({
-        apiKey,
-        dangerouslyAllowBrowser: true // Required for client-side usage
-      });
-    }
+    // No external dependencies needed - pure keyword search
   }
 
   // Load knowledge database from embeddings file
@@ -68,6 +58,7 @@ class VectorKnowledgeAPI {
       this.isLoaded = true;
       
       console.log(`✅ Loaded knowledge database with ${this.knowledgeDB?.items.length} items`);
+      console.log(`🔍 Search method: ${this.knowledgeDB?.metadata?.searchMethod || 'keyword-based'}`);
     } catch (error) {
       console.error('❌ Failed to load knowledge database:', error);
       // Initialize empty database as fallback
@@ -75,52 +66,14 @@ class VectorKnowledgeAPI {
         metadata: {
           generatedAt: new Date().toISOString(),
           totalItems: 0,
-          embeddingModel: 'text-embedding-ada-002',
+          embeddingModel: 'none',
           chunkSize: 800,
-          overlap: 100
+          overlap: 100,
+          searchMethod: 'keyword-based'
         },
         items: []
       };
       this.isLoaded = true;
-    }
-  }
-
-  // Calculate cosine similarity between two vectors
-  private cosineSimilarity(a: number[], b: number[]): number {
-    if (a.length !== b.length) return 0;
-    
-    let dotProduct = 0;
-    let normA = 0;
-    let normB = 0;
-    
-    for (let i = 0; i < a.length; i++) {
-      dotProduct += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
-    }
-    
-    if (normA === 0 || normB === 0) return 0;
-    
-    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-  }
-
-  // Generate embedding for a query
-  private async generateQueryEmbedding(query: string): Promise<number[] | null> {
-    if (!this.openai) {
-      console.warn('OpenAI client not initialized - falling back to keyword search');
-      return null;
-    }
-
-    try {
-      const response = await this.openai.embeddings.create({
-        model: 'text-embedding-ada-002',
-        input: query,
-      });
-      
-      return response.data[0].embedding;
-    } catch (error) {
-      console.error('Error generating query embedding:', error);
-      return null;
     }
   }
 
@@ -130,7 +83,7 @@ class VectorKnowledgeAPI {
     similarity: number, 
     query: string
   ): number {
-    let score = similarity * 100; // Base score from semantic similarity
+    let score = similarity * 100; // Base score from keyword similarity
     
     const lowerQuery = query.toLowerCase();
     const lowerContent = item.content.toLowerCase();
@@ -164,7 +117,7 @@ class VectorKnowledgeAPI {
     return Math.min(score, 100); // Cap at 100
   }
 
-  // Fallback keyword search when embeddings are not available
+  // Advanced keyword search with fuzzy matching and scoring
   private keywordSearch(query: string, limit: number = 10, authorFilter?: string): SearchResult[] {
     if (!this.knowledgeDB) return [];
     
@@ -181,22 +134,43 @@ class VectorKnowledgeAPI {
       const lowerContent = item.content.toLowerCase();
       const lowerTitle = item.title.toLowerCase();
       
-      // Count keyword matches
-      queryWords.forEach(word => {
-        const contentMatches = (lowerContent.match(new RegExp(word, 'g')) || []).length;
-        const titleMatches = (lowerTitle.match(new RegExp(word, 'g')) || []).length;
-        score += contentMatches + (titleMatches * 2);
+      // Exact phrase matching gets highest score
+      if (lowerContent.includes(lowerQuery) || lowerTitle.includes(lowerQuery)) {
+        score += 50;
+      }
+      
+      // Count keyword matches with diminishing returns
+      queryWords.forEach((word, index) => {
+        const contentMatches = (lowerContent.match(new RegExp('\\b' + word + '\\b', 'g')) || []).length;
+        const titleMatches = (lowerTitle.match(new RegExp('\\b' + word + '\\b', 'g')) || []).length;
+        
+        // Weight earlier words more heavily
+        const wordWeight = Math.max(1, 3 - index * 0.5);
+        score += (contentMatches * wordWeight) + (titleMatches * wordWeight * 2);
       });
       
-      // Topic matching
+      // Topic matching with exact and partial matches
       item.topics.forEach(topic => {
+        const topicWords = topic.replace('-', ' ').split(' ');
+        
+        // Exact topic match
         if (lowerQuery.includes(topic.replace('-', ' '))) {
-          score += 10;
+          score += 15;
         }
+        
+        // Partial topic word matching
+        topicWords.forEach(topicWord => {
+          if (queryWords.includes(topicWord)) {
+            score += 5;
+          }
+        });
       });
+      
+      // Length bonus for substantial content
+      if (item.content.length > 500) score += 2;
       
       if (score > 0) {
-        const similarity = Math.min(score / 20, 1); // Normalize to 0-1
+        const similarity = Math.min(score / 30, 1); // Normalize to 0-1
         results.push({
           item,
           similarity,
@@ -210,7 +184,7 @@ class VectorKnowledgeAPI {
       .slice(0, limit);
   }
 
-  // Main search function
+  // Main search function - pure keyword search
   async searchKnowledge(
     query: string, 
     limit: number = 10,
@@ -230,43 +204,18 @@ class VectorKnowledgeAPI {
       };
     }
 
-    // Try vector search first
-    const queryEmbedding = await this.generateQueryEmbedding(query);
+    // Use advanced keyword search
+    const results = this.keywordSearch(query, limit * 2, authorFilter);
     
-    let results: SearchResult[] = [];
+    // Filter by minimum similarity
+    const filteredResults = results.filter(result => result.similarity >= minSimilarity);
     
-    if (queryEmbedding) {
-      // Vector search using embeddings
-      for (const item of this.knowledgeDB.items) {
-        if (!item.embedding) continue;
-        
-        // Apply author filter if specified
-        if (authorFilter && item.author !== authorFilter) continue;
-        
-        const similarity = this.cosineSimilarity(queryEmbedding, item.embedding);
-        
-        if (similarity >= minSimilarity) {
-          results.push({
-            item,
-            similarity,
-            relevanceScore: this.calculateRelevanceScore(item, similarity, query)
-          });
-        }
-      }
-      
-      // Sort by relevance score
-      results.sort((a, b) => b.relevanceScore - a.relevanceScore);
-    } else {
-      // Fallback to keyword search
-      results = this.keywordSearch(query, limit * 2, authorFilter); // Get more for better filtering
-    }
-    
-    // Apply limit
-    const limitedResults = results.slice(0, limit);
+    // Apply final limit
+    const limitedResults = filteredResults.slice(0, limit);
     
     return {
       items: limitedResults,
-      totalFound: results.length,
+      totalFound: filteredResults.length,
       query,
       searchTime: Date.now() - startTime
     };

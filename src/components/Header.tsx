@@ -14,7 +14,7 @@ export const Header = () => {
               <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center">
                 <span className="text-white font-semibold text-lg">🚀</span>
               </div>
-              <h1 className="text-2xl font-semibold text-gray-900">Startup Philosopher</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">Venture Scout</h1>
             </Link>
           </div>
           
