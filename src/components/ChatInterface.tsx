@@ -134,8 +134,7 @@ export const ChatInterface = () => {
     contextChunks: any[];
   } | null>(null);
 
-  // Get API key from environment variable
-  const apiKey = import.meta.env.VITE_PERPLEXITY_API_KEY;
+  // API key is now handled server-side through the secure endpoint
 
   // Load knowledge base on component mount
   useEffect(() => {

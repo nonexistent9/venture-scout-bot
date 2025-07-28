@@ -9,7 +9,6 @@ import { Loader2, Lightbulb, CheckCircle, ChevronDown, ChevronUp, Download } fro
 import ReactMarkdown from 'react-markdown';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import axios from 'axios';
 import jsPDF from 'jspdf';
 
 interface BusinessModelCanvas {
@@ -317,15 +316,7 @@ const BusinessModelCanvas = () => {
       return;
     }
 
-    const apiKey = import.meta.env.VITE_PERPLEXITY_API_KEY;
-    if (!apiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please set your Perplexity API key in the environment variables.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // API key validation is now handled server-side
 
     setIsLoading(true);
 
@@ -378,25 +369,29 @@ const BusinessModelCanvas = () => {
         Focus on current market trends, industry analysis, and practical startup guidance.
       `;
 
-      const response = await axios.post('https://api.perplexity.ai/chat/completions', {
-        model: 'sonar-deep-research',
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 4000,
-        temperature: 0.7
-      }, {
+      const response = await fetch('/api/perplexity', {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: 4000
+        })
       });
 
-      const rawContent = response.data.choices[0].message.content;
-      const citations = response.data.citations || [];
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const rawContent = data.choices[0].message.content;
+      const citations = data.citations || [];
       
       // Debug: Log the raw content and citations
       console.log('Raw Perplexity Response:', rawContent);
