@@ -25,11 +25,7 @@ After creating the `.env.local` file, restart your development server:
 npm run dev
 ```
 
-### Example `.env.local` file:
-```
-# Perplexity API Key for all real-time data and AI analysis
-VITE_PERPLEXITY_API_KEY=pplx-1234567890abcdef1234567890abcdef
-```
+
 
 ### What Perplexity API Provides:
 
